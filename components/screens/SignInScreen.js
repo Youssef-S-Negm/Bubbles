@@ -1,5 +1,8 @@
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
+import SignInButton from '../buttons/SignInButton'
+import SignInWithGoogleButton from '../buttons/SignInWithGoogleButton'
+import SignUpButton from '../buttons/SignUpButton'
 
 const SignInScreen = () => {
     const [email, setEmail] = useState('')
@@ -36,9 +39,12 @@ const SignInScreen = () => {
                     forgot password?
                 </Text>
             </View>
-            <Button title='Sign in' />
+            <View style={{ height: 8 }} />
+            <SignInButton />
+            <View style={{height: 8}}/>
+            <SignInWithGoogleButton />
             <Text style={styles.normalText}>or</Text>
-            <Button title='Sign in with Google' />
+            <SignUpButton />
         </View>
     )
 }
@@ -72,6 +78,10 @@ const styles = StyleSheet.create({
     },
     forgotPasswordView: {
         alignSelf: 'stretch',
-        paddingTop: 4
+        paddingTop: 4,
+        flexDirection: 'row',
+    },
+    signUpText: {
+        textAlign: 'right'
     }
 })

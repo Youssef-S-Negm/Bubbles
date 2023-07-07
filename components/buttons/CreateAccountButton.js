@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
-const SignUpButton = () => {
+const CreateAccountButton = () => {
   return (
     <TouchableOpacity
             style={styles.container}
@@ -17,18 +17,18 @@ const SignUpButton = () => {
                 style={styles.gradient}
             >
                 <View style={styles.buttonText}>
-                    <Text style={styles.signUpText}>Sign Up</Text>
+                    <Text style={styles.signUpText}>Create account</Text>
                 </View>
             </LinearGradient>
         </TouchableOpacity>
   )
 }
 
-export default SignUpButton
+export default CreateAccountButton
 
 const styles = StyleSheet.create({
     container: {
-        flex: 0.7
+        width: 252.5
     },
     signUpText: {
         textAlign: 'center',

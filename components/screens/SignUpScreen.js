@@ -1,5 +1,6 @@
-import { StyleSheet, TextInput, View, Button } from 'react-native'
+import { StyleSheet, TextInput, View } from 'react-native'
 import { useState } from 'react'
+import SignUpButton from '../buttons/SignUpButton'
 
 const SignUpScreen = () => {
     const [firstName, setFirstName] = useState('')
@@ -49,7 +50,9 @@ const SignUpScreen = () => {
                 onChangeText={e => setConfirmPassword(e)}
             />
             <View style={{ height: 32 }} />
-            <Button title='sign up' />
+            <View style={styles.signUpButtonView}>
+                <SignUpButton />
+            </View>
         </View>
     )
 }
@@ -77,5 +80,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 8,
         borderRadius: 6,
+    },
+    signUpButtonView: {
+        flexDirection: 'row'
     }
 })

@@ -1,8 +1,8 @@
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
 import SignInButton from '../buttons/SignInButton'
 import SignInWithGoogleButton from '../buttons/SignInWithGoogleButton'
-import SignUpButton from '../buttons/SignUpButton'
+import CreateAccountButton from '../buttons/CreateAccountButton'
 
 const SignInScreen = () => {
     const [email, setEmail] = useState('')
@@ -44,7 +44,7 @@ const SignInScreen = () => {
             <View style={{height: 8}}/>
             <SignInWithGoogleButton />
             <Text style={styles.normalText}>or</Text>
-            <SignUpButton />
+            <CreateAccountButton />
         </View>
     )
 }

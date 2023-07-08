@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from "@firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "@firebase/auth";
 import { auth } from "./config";
 
 async function signUp(email, password, confirmPassword, firstName, lastName) {
@@ -17,7 +17,7 @@ async function signUp(email, password, confirmPassword, firstName, lastName) {
                 })
 
             if (userCredential && auth.currentUser) {
-                updateProfile(auth.currentUser, {
+                await updateProfile(auth.currentUser, {
                     displayName: firstName + " " + lastName
                 })
             }
@@ -27,4 +27,21 @@ async function signUp(email, password, confirmPassword, firstName, lastName) {
     }
 }
 
-export { signUp }
+async function signIn(email, password) {
+    if (email === "" || password === "") {
+        alert("Empty fields aren't allowed")
+    } else {
+        await signInWithEmailAndPassword(auth, email, password)
+            .catch(err => {
+                console.log(err.code)
+                if (err.code === "auth/user-not-found") {
+                    alert("User doesn't exist. Try creating an account")
+                }
+                if (err.code === "auth/wrong-password") {
+                    alert("Wrong password")
+                }
+            })
+    }
+}
+
+export { signUp, signIn }

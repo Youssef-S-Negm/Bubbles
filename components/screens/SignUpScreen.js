@@ -51,7 +51,13 @@ const SignUpScreen = () => {
             />
             <View style={{ height: 32 }} />
             <View style={styles.signUpButtonView}>
-                <SignUpButton />
+                <SignUpButton
+                    email={email}
+                    password={password}
+                    confirmPassword={confirmPassword}
+                    firstName={firstName}
+                    lastName={lastName}
+                />
             </View>
         </View>
     )

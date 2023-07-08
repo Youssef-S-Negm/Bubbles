@@ -1,5 +1,6 @@
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
 import { useState } from 'react'
+import SendEmailButton from '../buttons/SendEmailButton'
 
 const ForgotPasswordScreen = () => {
     const [email, setEmail] = useState('')
@@ -7,7 +8,7 @@ const ForgotPasswordScreen = () => {
     return (
         <View style={styles.container}>
             <Text>Please, enter your E-mail</Text>
-            <View style={{height: 8}}/>
+            <View style={{ height: 8 }} />
             <TextInput
                 placeholder='user@example.com'
                 style={styles.textInput}
@@ -15,8 +16,10 @@ const ForgotPasswordScreen = () => {
                 onChangeText={e => setEmail(e)}
                 keyboardType='email-address'
             />
-            <View style={{height: 32}}/>
-            <Button title='Send E-mail'/>
+            <View style={{ height: 32 }} />
+            <View style={styles.buttonView}>
+                <SendEmailButton email={email} />
+            </View>
         </View>
     )
 }
@@ -32,5 +35,9 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1
+    },
+    buttonView: {
+        flexDirection: 'row',
+        justifyContent: 'center'
     }
 })

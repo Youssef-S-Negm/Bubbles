@@ -40,7 +40,7 @@ const SignInScreen = () => {
                 </Text>
             </View>
             <View style={{ height: 8 }} />
-            <SignInButton />
+            <SignInButton email={email} password={password}/>
             <View style={{height: 8}}/>
             <SignInWithGoogleButton />
             <Text style={styles.normalText}>or</Text>

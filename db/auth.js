@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "@firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "@firebase/auth";
 import { auth } from "./config";
 
 async function signUp(email, password, confirmPassword, firstName, lastName) {
@@ -44,4 +44,21 @@ async function signIn(email, password) {
     }
 }
 
-export { signUp, signIn }
+async function resetPassword(email) {
+    await sendPasswordResetEmail(auth, email)
+        .then(() => alert("Please, follow the link sent to your e-mail."))
+        .catch(err => {
+            console.log(err.code)
+            if (err.code === "auth/missing-email") {
+                alert("E-mail field is empty!")
+            }
+            if (err.code === "auth/invalid-email") {
+                alert("Invalid E-mail!")
+            }
+            if (err.code === "auth/user-not-found") {
+                alert("User doesn't exist. Try creating an account.")
+            }
+        })
+}
+
+export { signUp, signIn, resetPassword }

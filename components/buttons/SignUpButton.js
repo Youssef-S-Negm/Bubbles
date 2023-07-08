@@ -3,12 +3,12 @@ import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { signUp } from '../../db/auth'
 
-const SignUpButton = ({ email, password, confirmPassword }) => {
+const SignUpButton = ({ email, password, confirmPassword, firstName, lastName }) => {
     return (
         <TouchableOpacity
             style={styles.container}
             onPress={() => {
-                signUp(email, password, confirmPassword)
+                signUp(email, password, confirmPassword, firstName, lastName)
             }}
         >
             <LinearGradient

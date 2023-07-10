@@ -1,5 +1,13 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "@firebase/auth";
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile,
+    sendPasswordResetEmail,
+    GoogleAuthProvider,
+    signInWithCredential
+} from "@firebase/auth";
 import { auth } from "./config";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 async function signUp(email, password, confirmPassword, firstName, lastName) {
     if (password === "" || email === "" || firstName === "" || lastName === "") {
@@ -61,4 +69,15 @@ async function resetPassword(email) {
         })
 }
 
-export { signUp, signIn, resetPassword }
+async function signInWithGoogle() {
+    GoogleSignin.configure({
+        webClientId: '547883116788-lqgq2ump6b2974odd8rhd7gug0ql0ref.apps.googleusercontent.com'
+    })
+
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+    const { idToken } = await GoogleSignin.signIn()
+    const googleCredential = GoogleAuthProvider.credential(idToken)
+    return await signInWithCredential(auth, googleCredential)
+}
+
+export { signUp, signIn, resetPassword, signInWithGoogle }

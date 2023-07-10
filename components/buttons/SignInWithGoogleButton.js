@@ -1,11 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
 import React from 'react'
+import { signInWithGoogle } from '../../db/auth'
 
 const SignInWithGoogleButton = () => {
     return (
         <TouchableOpacity
             onPress={() => {
-                //TODO
+                signInWithGoogle()
             }}
         >
             <View style={styles.container}>

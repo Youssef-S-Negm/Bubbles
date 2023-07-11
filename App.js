@@ -1,16 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
-import SignInScreen from './components/screens/SignInScreen';
-import SignUpScreen from './components/screens/SignUpScreen';
-import ForgotPasswordScreen from './components/screens/ForgotPasswordScreen';
 import 'expo-dev-client'
+import AuthStack from './components/screen_stacks/AuthStack';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      {/* <SignUpScreen /> */}
-      <SignInScreen />
-      {/* <ForgotPasswordScreen /> */}
+      <AuthStack />
       <StatusBar style="auto" />
     </View>
   );

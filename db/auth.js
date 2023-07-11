@@ -4,7 +4,8 @@ import {
     updateProfile,
     sendPasswordResetEmail,
     GoogleAuthProvider,
-    signInWithCredential
+    signInWithCredential,
+    signOut
 } from "@firebase/auth";
 import { auth } from "./config";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
@@ -83,4 +84,12 @@ async function signInWithGoogle() {
     await addUserToDb(auth.currentUser)
 }
 
-export { signUp, signIn, resetPassword, signInWithGoogle }
+async function signOutFromApp() {
+    try {
+        await signOut(auth)
+    } catch (err) {
+        alert("Couldn't sign out. Please, try again.")
+    }
+}
+
+export { signUp, signIn, resetPassword, signInWithGoogle, signOutFromApp }

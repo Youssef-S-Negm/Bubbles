@@ -12,8 +12,12 @@ export default function App() {
   const [user, setUser] = useState();
 
   async function handleAuthState(user) {
-    const dbUser = await getUserById(user.uid)
-    setUser(dbUser);
+    if (user) {
+      const dbUser = await getUserById(user.uid)
+      setUser(dbUser);
+    } else {
+      setUser(null)
+    }
     if (initializing) setInitializing(false);
   }
 

@@ -1,4 +1,4 @@
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./config";
 
 async function addUserToDb(user) {
@@ -16,4 +16,18 @@ async function addUserToDb(user) {
     }
 }
 
-export { addUserToDb }
+async function getUserById(id) {
+    try {
+        const docRef = doc(db, 'users', id)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+            return docSnap.data()
+        } else {
+            return null
+        }
+    } catch(err) {
+        console.log('Error reading the document', err);
+    }
+}
+
+export { addUserToDb, getUserById }

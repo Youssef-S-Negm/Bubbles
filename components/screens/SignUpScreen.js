@@ -2,7 +2,7 @@ import { StyleSheet, TextInput, View } from 'react-native'
 import { useState } from 'react'
 import SignUpButton from '../buttons/SignUpButton'
 
-const SignUpScreen = () => {
+const SignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [email, setEmail] = useState('')
@@ -57,6 +57,7 @@ const SignUpScreen = () => {
                     confirmPassword={confirmPassword}
                     firstName={firstName}
                     lastName={lastName}
+                    navigation={navigation}
                 />
             </View>
         </View>

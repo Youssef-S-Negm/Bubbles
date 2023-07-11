@@ -2,7 +2,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native'
 import { useState } from 'react'
 import SendEmailButton from '../buttons/SendEmailButton'
 
-const ForgotPasswordScreen = () => {
+const ForgotPasswordScreen = ({ navigation }) => {
     const [email, setEmail] = useState('')
 
     return (
@@ -18,7 +18,7 @@ const ForgotPasswordScreen = () => {
             />
             <View style={{ height: 32 }} />
             <View style={styles.buttonView}>
-                <SendEmailButton email={email} />
+                <SendEmailButton email={email} navigation={navigation} />
             </View>
         </View>
     )

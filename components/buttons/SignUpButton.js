@@ -3,12 +3,13 @@ import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { signUp } from '../../db/auth'
 
-const SignUpButton = ({ email, password, confirmPassword, firstName, lastName }) => {
+const SignUpButton = ({ email, password, confirmPassword, firstName, lastName, navigation }) => {
     return (
         <TouchableOpacity
             style={styles.container}
-            onPress={() => {
-                signUp(email, password, confirmPassword, firstName, lastName)
+            onPress={async () => {
+                await signUp(email, password, confirmPassword, firstName, lastName)
+                navigation.goBack()
             }}
         >
             <LinearGradient

@@ -2,12 +2,13 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { resetPassword } from '../../db/auth'
 
-const SendEmailButton = ({email}) => {
-  return (
-    <TouchableOpacity
+const SendEmailButton = ({ email, navigation }) => {
+    return (
+        <TouchableOpacity
             style={styles.container}
-            onPress={() => {
-                resetPassword(email)
+            onPress={async () => {
+                await resetPassword(email)
+                navigation.goBack()
             }}
         >
             <LinearGradient
@@ -21,7 +22,7 @@ const SendEmailButton = ({email}) => {
                 </View>
             </LinearGradient>
         </TouchableOpacity>
-  )
+    )
 }
 
 export default SendEmailButton

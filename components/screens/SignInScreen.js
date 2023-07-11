@@ -4,7 +4,7 @@ import SignInButton from '../buttons/SignInButton'
 import SignInWithGoogleButton from '../buttons/SignInWithGoogleButton'
 import CreateAccountButton from '../buttons/CreateAccountButton'
 
-const SignInScreen = () => {
+const SignInScreen = ({ navigation }) => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
@@ -33,18 +33,18 @@ const SignInScreen = () => {
                 <Text
                     style={styles.forgotPasswordText}
                     onPress={() => {
-                        //TODO
+                        navigation.navigate('Forgot password')
                     }}
                 >
                     forgot password?
                 </Text>
             </View>
             <View style={{ height: 8 }} />
-            <SignInButton email={email} password={password}/>
-            <View style={{height: 8}}/>
+            <SignInButton email={email} password={password} />
+            <View style={{ height: 8 }} />
             <SignInWithGoogleButton />
             <Text style={styles.normalText}>or</Text>
-            <CreateAccountButton />
+            <CreateAccountButton navigation={navigation} />
         </View>
     )
 }
@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
+        paddingTop: 32
     },
     greetingText: {
         fontSize: 24,

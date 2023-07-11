@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
+        paddingTop: 32
     },
     nameView: {
         alignSelf: 'stretch',

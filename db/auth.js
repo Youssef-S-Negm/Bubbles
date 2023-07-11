@@ -8,6 +8,7 @@ import {
 } from "@firebase/auth";
 import { auth } from "./config";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { addUserToDb } from "./users";
 
 async function signUp(email, password, confirmPassword, firstName, lastName) {
     if (password === "" || email === "" || firstName === "" || lastName === "") {
@@ -28,6 +29,7 @@ async function signUp(email, password, confirmPassword, firstName, lastName) {
                 await updateProfile(auth.currentUser, {
                     displayName: firstName + " " + lastName
                 })
+                await addUserToDb(auth.currentUser)
             }
         } else {
             alert("Password and confirm password doesn't match")
@@ -77,7 +79,8 @@ async function signInWithGoogle() {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
     const { idToken } = await GoogleSignin.signIn()
     const googleCredential = GoogleAuthProvider.credential(idToken)
-    return await signInWithCredential(auth, googleCredential)
+    await signInWithCredential(auth, googleCredential)
+    await addUserToDb(auth.currentUser)
 }
 
 export { signUp, signIn, resetPassword, signInWithGoogle }

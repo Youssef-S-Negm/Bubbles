@@ -5,13 +5,15 @@ import AuthStack from './components/screen_stacks/AuthStack';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './db/config';
+import { getUserById } from './db/users';
 
 export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
 
-  function handleAuthState(user) {
-    setUser(user);
+  async function handleAuthState(user) {
+    const dbUser = await getUserById(user.uid)
+    setUser(dbUser);
     if (initializing) setInitializing(false);
   }
 
@@ -24,7 +26,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {!user ? <AuthStack /> : <View style={{alignItems:'center', justifyContent: 'center', flex: 1}}><Text>Home</Text></View>}
+      {!user ? <AuthStack /> : <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}><Text>{user.displayName}</Text></View>}
       <StatusBar style="auto" />
     </View>
   );

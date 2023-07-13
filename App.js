@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './db/config';
 import { getUserById } from './db/users';
+import AppStack from './components/screen_stacks/AppStack';
 
 export default function App() {
   const [initializing, setInitializing] = useState(true);
@@ -30,7 +31,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {!user ? <AuthStack /> : <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}><Text>{user.displayName}</Text></View>}
+      {!user ? <AuthStack /> : <AppStack user={user} />}
       <StatusBar style="auto" />
     </View>
   );
@@ -39,7 +40,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingStart: 8,
-    paddingEnd: 8
+    // paddingStart: 8,
+    // paddingEnd: 8
   },
 });

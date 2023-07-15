@@ -18,7 +18,7 @@ const FindTab = ({ focused }) => {
                 }
             >
                 <LinearGradient
-                    colors={['#c4ddfe', '#fed8f7']}
+                    colors={['#00736e', '#6a00c9']}
                     start={{ x: 1, y: 0 }}
                     end={{ x: 0, y: 1 }}
                     style={styles.gradient}

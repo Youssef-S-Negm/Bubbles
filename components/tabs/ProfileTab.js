@@ -5,16 +5,16 @@ const ProfileTab = ({ focused, user }) => {
     return (
         focused ?
             <LinearGradient
-                colors={['#c4ddfe', '#fed8f7']}
+                colors={['#00736e', '#6a00c9']}
                 start={{ x: 1, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.gradient}
             >
-                <Image source={user.photoURL? {uri: user.photoURL}:require('../../assets/avatar.png')} resizeMode='contain' style={styles.image} />
+                <Image source={user.photoURL ? { uri: user.photoURL } : require('../../assets/avatar.png')} resizeMode='contain' style={styles.image} />
             </LinearGradient>
             :
             <View style={styles.view}>
-                <Image source={user.photoURL? {uri: user.photoURL}:require('../../assets/avatar.png')} resizeMode='contain' style={styles.image} />
+                <Image source={user.photoURL ? { uri: user.photoURL } : require('../../assets/avatar.png')} resizeMode='contain' style={styles.image} />
             </View>
     )
 }

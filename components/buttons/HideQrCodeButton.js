@@ -2,14 +2,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
-import { AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
-const ShowQrCodeButton = ({ setModalVisible }) => {
+const HideQrCodeButton = ({ setModalVisible }) => {
     return (
         <TouchableOpacity
-            style={styles.container}
             onPress={() => {
-                setModalVisible(true)
+                setModalVisible(false)
             }}
         >
             <LinearGradient
@@ -22,7 +21,7 @@ const ShowQrCodeButton = ({ setModalVisible }) => {
                     <MaskedView
                         maskElement={
                             <View style={styles.iconView}>
-                                <AntDesign name="qrcode" style={styles.icon} />
+                                <Ionicons name="eye-off" style={styles.icon} />
                             </View>
                         }
                     >
@@ -33,19 +32,16 @@ const ShowQrCodeButton = ({ setModalVisible }) => {
                             style={styles.iconGradient}
                         />
                     </MaskedView>
-                    <Text style={styles.buttonText}>Show QR code</Text>
+                    <Text style={styles.buttonText}>Hide QR code</Text>
                 </View>
             </LinearGradient>
         </TouchableOpacity>
     )
 }
 
-export default ShowQrCodeButton
+export default HideQrCodeButton
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 0.7
-    },
     iconView: {
         flex: 1,
         backgroundColor: 'transparent',
@@ -72,6 +68,6 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 20,
         textAlign: 'center',
-        paddingLeft: '10%'
+        paddingHorizontal: 8
     }
 })

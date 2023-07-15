@@ -4,12 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { AntDesign } from '@expo/vector-icons';
 
-const ShowQrCodeButton = () => {
+const ShowQrCodeButton = ({ setModalVisible }) => {
     return (
         <TouchableOpacity
             style={styles.container}
             onPress={() => {
-                //Todo
+                setModalVisible(true)
             }}
         >
             <LinearGradient

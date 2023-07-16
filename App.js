@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import 'expo-dev-client'
 import AuthStack from './components/screen_stacks/AuthStack';
 import { useState, useEffect } from 'react';
@@ -31,7 +31,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {!user ? <AuthStack /> : <AppStack user={user} />}
+      {!user ? <AuthStack /> : <AppStack user={user} setUser={setUser} />}
       <StatusBar style="auto" />
     </View>
   );

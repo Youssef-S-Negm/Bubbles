@@ -2,18 +2,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
-import { AntDesign } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const EditProfileButton = ({ setModalVisible }) => {
+const CancelEditProfileButton = ({ setModalVisible }) => {
     return (
         <TouchableOpacity
-            style={styles.container}
-            onPress={() => {
-                setModalVisible(true)
+            onPress={async () => {
+                setModalVisible(false)
             }}
         >
             <LinearGradient
-                colors={['#00736e', '#6a00c9']}
+                colors={['red', 'orange']}
                 start={{ x: 1, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.gradient}
@@ -22,30 +21,27 @@ const EditProfileButton = ({ setModalVisible }) => {
                     <MaskedView
                         maskElement={
                             <View style={styles.iconView}>
-                                <AntDesign name="edit" style={styles.icon} />
+                                <MaterialCommunityIcons name="cancel" style={styles.icon} />
                             </View>
                         }
                     >
                         <LinearGradient
-                            colors={['#00736e', '#6a00c9']}
+                            colors={['red', 'orange']}
                             start={{ x: 1, y: 0 }}
                             end={{ x: 0, y: 1 }}
                             style={styles.iconGradient}
                         />
                     </MaskedView>
-                    <Text style={styles.buttonText}>Edit profile</Text>
+                    <Text style={styles.buttonText}>Cancel</Text>
                 </View>
             </LinearGradient>
         </TouchableOpacity>
     )
 }
 
-export default EditProfileButton
+export default CancelEditProfileButton
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 0.7
-    },
     iconView: {
         flex: 1,
         backgroundColor: 'transparent',
@@ -72,6 +68,6 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 20,
         textAlign: 'center',
-        paddingLeft: '15%'
+        paddingLeft: 8
     }
 })

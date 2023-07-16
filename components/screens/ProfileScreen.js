@@ -1,11 +1,14 @@
-import { Image, Modal, StyleSheet, Text, View } from 'react-native'
-import { useState } from 'react'
+import { Image, Modal, StyleSheet, Text, TextInput, View } from 'react-native'
+import { useEffect, useState } from 'react'
 import SignOutButton from '../buttons/SignOutButton'
 import ShowQrCodeButton from '../buttons/ShowQrCodeButton'
 import EditProfileButton from '../buttons/EditProfileButton'
 import { AntDesign } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg'
 import HideQrCodeButton from '../buttons/HideQrCodeButton'
+import DoneEditProfileButton from '../buttons/DoneEditProfileButton'
+import CancelEditProfileButton from '../buttons/CancelEditProfileButton'
+import { getUserById,  userSubscribeListener } from '../../db/users'
 
 const QrModal = ({ modalVisible, setModalVisible, user }) => {
     return (
@@ -34,12 +37,81 @@ const QrModal = ({ modalVisible, setModalVisible, user }) => {
     )
 }
 
-const ProfileScreen = ({ user }) => {
-    const [modalVisible, setModalVisible] = useState(false);
+const EditProfileModal = ({ modalVisible, setModalVisible, user }) => {
+    const [username, setUsername] = useState(user.displayName)
+    const [phone, setPhone] = useState(user.phoneNumber ? user.phoneNumber : '')
+
+    return (
+        <Modal
+            animationType='slide'
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+                setModalVisible(false)
+            }}
+            style={{ flex: 1 }}
+        >
+            <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                    <View style={styles.textInputView}>
+                        <AntDesign name="user" size={24} color="black" />
+                        <View style={{ width: 8 }} />
+                        <TextInput
+                            placeholder='Enter your username'
+                            value={username}
+                            onChangeText={e => setUsername(e)}
+                            style={styles.textInput}
+                        />
+                    </View>
+                    <View style={{ height: 8 }} />
+                    <View style={styles.textInputView}>
+                        <AntDesign name="phone" size={24} color="black" />
+                        <View style={{ width: 8 }} />
+                        <TextInput
+                            placeholder='Enter your phone number'
+                            value={phone}
+                            onChangeText={e => setPhone(e)}
+                            keyboardType='phone-pad'
+                            style={styles.textInput}
+                        />
+                    </View>
+                    <View style={{ flexDirection: 'row', paddingTop: 8, }}>
+                        <CancelEditProfileButton setModalVisible={setModalVisible} />
+                        <View style={{ width: 16 }} />
+                        <DoneEditProfileButton
+                            setModalVisible={setModalVisible}
+                            id={user.id}
+                            username={username}
+                            phoneNumber={phone}
+                        />
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    )
+}
+
+const ProfileScreen = ({ user, setUser }) => {
+    const [qrModalVisible, setQrModalVisible] = useState(false);
+    const [editProfileModalVisible, setEditProfileModalVisible] = useState(false)
+
+    useEffect(() => {
+        const unsubscribe = userSubscribeListener(user.id, ({ change }) => {
+            if (change.type === "modified") {
+                getUserById(user.id).then(e => setUser(e))
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
 
     return (
         <View style={styles.container}>
-            <QrModal modalVisible={modalVisible} setModalVisible={setModalVisible} user={user} />
+            <QrModal modalVisible={qrModalVisible} setModalVisible={setQrModalVisible} user={user} />
+            <EditProfileModal modalVisible={editProfileModalVisible} setModalVisible={setEditProfileModalVisible} user={user} />
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Image
                     source={user.photoURL ? { uri: user.photoURL } : require('../../assets/avatar.png')}
@@ -60,10 +132,10 @@ const ProfileScreen = ({ user }) => {
             </View>
             <View style={{ height: 32 }} />
             <View style={styles.buttonView}>
-                <ShowQrCodeButton setModalVisible={setModalVisible} />
+                <ShowQrCodeButton setModalVisible={setQrModalVisible} />
             </View>
             <View style={styles.buttonView}>
-                <EditProfileButton />
+                <EditProfileButton setModalVisible={setEditProfileModalVisible} />
             </View>
             <View style={styles.buttonViewSignOut}>
                 <SignOutButton />
@@ -135,5 +207,16 @@ const styles = StyleSheet.create({
         alignItems: "center",
         shadowColor: "#000",
         elevation: 5
+    },
+    textInputView: {
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+    },
+    textInput: {
+        flex: 1,
+        padding: 8
     }
 })

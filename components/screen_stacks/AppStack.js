@@ -11,7 +11,7 @@ import ProfileTab from '../tabs/ProfileTab'
 
 const Tab = createBottomTabNavigator()
 
-const AppTabs = ({ user }) => {
+const AppTabs = ({ user, setUser }) => {
     return (
         <Tab.Navigator
             initialRouteName='Chats'
@@ -41,16 +41,16 @@ const AppTabs = ({ user }) => {
             <Tab.Screen
                 name='Profile'
             >
-                {(props) => <ProfileScreen {...props} user={user}/>}
+                {(props) => <ProfileScreen {...props} user={user} setUser={setUser}/>}
             </Tab.Screen>
         </Tab.Navigator>
     )
 }
 
-const AppStack = ({ user }) => {
+const AppStack = ({ user, setUser }) => {
     return (
         <NavigationContainer>
-            <AppTabs user={user} />
+            <AppTabs user={user} setUser={setUser}/>
         </NavigationContainer>
     )
 }

@@ -4,12 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { AntDesign } from '@expo/vector-icons';
 
-const EditProfileButton = () => {
+const EditProfileButton = ({ setModalVisible }) => {
     return (
         <TouchableOpacity
             style={styles.container}
             onPress={() => {
-                //TODO
+                setModalVisible(true)
             }}
         >
             <LinearGradient

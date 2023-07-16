@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { AntDesign, MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../../db/config';
 
 const SearchForAUser = () => {
   return (
@@ -50,7 +51,10 @@ const NoUserExist = () => {
 const UserItem = ({ item }) => {
   return (
     <View style={{ flexDirection: 'row', width: '100%', padding: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#EBEBE4' }}>
-      <Image source={item.image} style={{ height: 50, width: 50, borderRadius: 50 }} />
+      <Image
+        source={item.photoURL ? { uri: item.photoURL } : require('../../assets/avatar.png')}
+        style={{ height: 50, width: 50, borderRadius: 50 }}
+      />
       <Text style={{ paddingLeft: 8 }}>{item.displayName}</Text>
       <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
         <TouchableOpacity
@@ -65,18 +69,30 @@ const UserItem = ({ item }) => {
   )
 }
 
-const FindUsersScreen = () => {
+const FindUsersScreen = ({ user }) => {
   const [username, setUsername] = useState('')
-  const [users, setUsers] = useState([{
-    image: require('../../assets/avatar.png'),
-    displayName: 'Test user',
-    id: 1
-  }, {
-    image: require('../../assets/avatar.png'),
-    displayName: 'Test user',
-    id: 2
-  }])
+  const [users, setUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
+  useEffect(() => {
+    const subscribe = onSnapshot(query(collection(db, 'users')), querySnapshot => {
+      const users = [];
+      setIsLoading(true)
+
+      querySnapshot.forEach(documentSnapshot => {
+        if (documentSnapshot.id != user.id && documentSnapshot.data().displayName.toUpperCase().includes(username.toUpperCase()) && username.length > 0) {
+          users.push({
+            ...documentSnapshot.data(),
+            key: documentSnapshot.id
+          })
+        }
+      });
+      setUsers(users);
+      setIsLoading(false)
+    });
+
+    return () => subscribe();
+  }, [username]);
 
   return (
     <View style={styles.container}>
@@ -101,8 +117,8 @@ const FindUsersScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      {users == null ? <SearchForAUser />
-        : users.length !== 0 ?
+      {users.length === 0 && username.length === 0 ? <SearchForAUser />
+        : users.length !== 0 || isLoading ?
           <View style={{ paddingTop: 8, flex: 1 }}>
             <FlatList
               data={users}
@@ -127,5 +143,10 @@ const styles = StyleSheet.create({
   textInput: {
     padding: 8,
     width: '88%'
+  },
+  activityIndicatorContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    justifyContent: 'center'
   }
 })

@@ -36,12 +36,13 @@ const AppTabs = ({ user, setUser }) => {
             </Tab.Screen>
             <Tab.Screen
                 name='Find'
-                component={FindUsersScreen}
-            />
+            >
+                {props => <FindUsersScreen {...props} user={user} />}
+            </Tab.Screen>
             <Tab.Screen
                 name='Profile'
             >
-                {(props) => <ProfileScreen {...props} user={user} setUser={setUser}/>}
+                {(props) => <ProfileScreen {...props} user={user} setUser={setUser} />}
             </Tab.Screen>
         </Tab.Navigator>
     )
@@ -50,7 +51,7 @@ const AppTabs = ({ user, setUser }) => {
 const AppStack = ({ user, setUser }) => {
     return (
         <NavigationContainer>
-            <AppTabs user={user} setUser={setUser}/>
+            <AppTabs user={user} setUser={setUser} />
         </NavigationContainer>
     )
 }

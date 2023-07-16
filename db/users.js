@@ -1,5 +1,6 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "./config";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { auth, db } from "./config";
+import { updateProfile } from "firebase/auth";
 
 async function addUserToDb(user) {
     try {
@@ -25,9 +26,38 @@ async function getUserById(id) {
         } else {
             return null
         }
-    } catch(err) {
+    } catch (err) {
         console.log('Error reading the document', err);
     }
 }
 
-export { addUserToDb, getUserById }
+async function updateUserInfo(id, username, phoneNumber) {
+    try {
+        if (username.length === 0) {
+            alert("Username can't be empty")
+        } else {
+            const docRef = doc(db, 'users', id)
+            await updateProfile(auth.currentUser, {
+                displayName: username,
+                phoneNumber: phoneNumber
+            })
+            await updateDoc(docRef, {
+                displayName: username,
+                phoneNumber: phoneNumber.length === 0? null: phoneNumber
+            })
+        }
+    } catch (err) {
+        console.log("Couldn't update your profile:", err);
+    }
+}
+
+function userSubscribeListener(id, callback) {
+    const unsubscribe = onSnapshot(query(collection(db, "users"), where('id', '==', id)), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (callback) callback({ change });
+      });
+    });
+    return unsubscribe;
+  }
+
+export { addUserToDb, getUserById, updateUserInfo, userSubscribeListener }

@@ -50,7 +50,7 @@ const NoUserExist = () => {
 
 const UserItem = ({ item }) => {
   return (
-    <View style={{ flexDirection: 'row', width: '100%', padding: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#EBEBE4' }}>
+    <View style={{ flexDirection: 'row', width: '100%', padding: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#EBEBE4', elevation: 5 }}>
       <Image
         source={item.photoURL ? { uri: item.photoURL } : require('../../assets/avatar.png')}
         style={{ height: 50, width: 50, borderRadius: 50 }}

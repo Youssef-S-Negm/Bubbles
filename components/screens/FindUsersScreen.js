@@ -69,7 +69,7 @@ const UserItem = ({ item }) => {
   )
 }
 
-const FindUsersScreen = ({ user }) => {
+const FindUsersScreen = ({ navigation, user }) => {
   const [username, setUsername] = useState('')
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -96,7 +96,6 @@ const FindUsersScreen = ({ user }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 20, paddingBottom: 8 }}>Find a user</Text>
       <View style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 8, alignItems: 'center' }}>
         <TextInput
           placeholder='Type a username'
@@ -106,7 +105,7 @@ const FindUsersScreen = ({ user }) => {
         />
         <TouchableOpacity
           onPress={() => {
-            //TODO
+            navigation.navigate('Scan QR code')
           }}
         >
           <AntDesign

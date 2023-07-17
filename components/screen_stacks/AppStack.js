@@ -1,13 +1,12 @@
-import { StyleSheet, View, Text } from 'react-native'
-import React from 'react'
+import { StyleSheet } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import HomeScreen from '../screens/HomeScreen'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import FindUsersScreen from '../screens/FindUsersScreen'
 import ChatTab from '../tabs/ChatTab'
 import FindTab from '../tabs/FindTab'
 import ProfileScreen from '../screens/ProfileScreen'
 import ProfileTab from '../tabs/ProfileTab'
+import FindUserStack from './FindUserStack'
 
 const Tab = createBottomTabNavigator()
 
@@ -36,8 +35,11 @@ const AppTabs = ({ user, setUser }) => {
             </Tab.Screen>
             <Tab.Screen
                 name='Find'
+                options={{
+                    headerShown: false
+                }}
             >
-                {props => <FindUsersScreen {...props} user={user} />}
+                {props => <FindUserStack {...props} user={user} />}
             </Tab.Screen>
             <Tab.Screen
                 name='Profile'

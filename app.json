@@ -3,7 +3,13 @@
     "name": "Bubbles",
     "slug": "Bubbles",
     "plugins": [
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access camera."
+        }
+      ]
     ],
     "version": "1.0.0",
     "orientation": "portrait",

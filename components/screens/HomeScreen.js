@@ -12,14 +12,7 @@ const NoChats = () => {
                 <View style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="chatbubble" style={{ fontSize: 60 }} />
                     <Text style={{ fontSize: 20, color: 'black', fontWeight: 'bold', textAlign: 'justify' }}>
-                        Your chats will appear here when you connect with other users. <Text
-                            style={{ textDecorationLine: 'underline' }}
-                            onPress={() => {
-                                //TODO
-                            }}
-                        >
-                            Search for users here.
-                        </Text>
+                        Your chats will appear here when you connect with other users.
                     </Text>
                 </View>
             }
@@ -39,7 +32,7 @@ const HomeScreen = ({ navigation, user }) => {
 
     return (
         <View style={styles.container}>
-            {chats.length === 0 ? <NoChats />
+            {chats.length === 0 ? <NoChats navigation={navigation} />
                 :
                 <FlatList
                     data={chats}

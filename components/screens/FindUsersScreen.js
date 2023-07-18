@@ -5,6 +5,7 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../../db/config';
+import { sendRequest } from '../../db/users';
 
 const SearchForAUser = () => {
   return (
@@ -58,8 +59,8 @@ const UserItem = ({ item }) => {
       <Text style={{ paddingLeft: 8 }}>{item.displayName}</Text>
       <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
         <TouchableOpacity
-          onPress={() => {
-            //TODO
+          onPress={async () => {
+            await sendRequest(item.id)
           }}
         >
           <Ionicons name="person-add" style={{ fontSize: 20 }} />
@@ -121,7 +122,7 @@ const FindUsersScreen = ({ navigation, user }) => {
           <View style={{ paddingTop: 8, flex: 1 }}>
             <FlatList
               data={users}
-              renderItem={({ item }) => <UserItem item={item} />}
+              renderItem={({ item }) => <UserItem item={item} userId={user.id} />}
               ItemSeparatorComponent={<View style={{ height: 8 }} />}
               keyExtractor={item => item.id}
             />

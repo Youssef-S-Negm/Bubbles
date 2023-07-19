@@ -4,6 +4,7 @@ import SentRequestsScreen from "../screens/SentRequestsScreen";
 import { getUserById, userSubscribeListener } from "../../db/users";
 import { auth } from "../../db/config";
 import { useEffect, useState } from "react";
+import { Text } from "react-native";
 
 const Tab = createMaterialTopTabNavigator()
 
@@ -42,7 +43,29 @@ const ConnectionsStack = () => {
     }, []);
 
     return (
-        <Tab.Navigator>
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarShowLabel: false,
+                tabBarIcon: ({ focused }) => {
+                    if (route.name === 'Pending requests') {
+                        return <Text style={{
+                            color: focused ? '#323D98' : '#EBEBE4'
+                        }}>Pending requests</Text>
+                    } else if (route.name === 'Sent requests') {
+                        return <Text style={{
+                            color: focused ? '#323D98' : '#EBEBE4'
+                        }}>Sent requests</Text>
+                    }
+                },
+                tabBarIconStyle: {
+                    flex: 1,
+                    width: '100%',
+                },
+                tabBarIndicatorStyle: {
+                    backgroundColor: '#323D98'
+                }
+            })}
+        >
             <Tab.Screen name="Pending requests">
                 {props => <PendingRequestsScreen {...props} pendingUsers={pendingUsers} />}
             </Tab.Screen>

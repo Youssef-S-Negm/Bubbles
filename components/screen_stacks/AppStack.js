@@ -7,6 +7,8 @@ import FindTab from '../tabs/FindTab'
 import ProfileScreen from '../screens/ProfileScreen'
 import ProfileTab from '../tabs/ProfileTab'
 import FindUserStack from './FindUserStack'
+import ConnectionsStack from './ConnectionsStack'
+import ConnectionsTab from '../tabs/ConnectionsTab'
 
 const Tab = createBottomTabNavigator()
 
@@ -22,6 +24,8 @@ const AppTabs = ({ user, setUser }) => {
                         return <ChatTab focused={focused} />
                     } else if (route.name === 'Find') {
                         return <FindTab focused={focused} />
+                    } else if (route.name === 'Connections') {
+                        return <ConnectionsTab focused={focused} />
                     } else if (route.name === 'Profile') {
                         return <ProfileTab focused={focused} user={user} />
                     }
@@ -40,6 +44,9 @@ const AppTabs = ({ user, setUser }) => {
                 }}
             >
                 {props => <FindUserStack {...props} user={user} />}
+            </Tab.Screen>
+            <Tab.Screen name='Connections'>
+                {props => <ConnectionsStack {...props} user={user} />}
             </Tab.Screen>
             <Tab.Screen
                 name='Profile'

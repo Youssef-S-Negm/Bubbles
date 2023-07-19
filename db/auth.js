@@ -9,7 +9,7 @@ import {
 } from "@firebase/auth";
 import { auth } from "./config";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { addUserToDb } from "./users";
+import { addUserToDb, getUserById } from "./users";
 
 async function signUp(email, password, confirmPassword, firstName, lastName) {
     if (password === "" || email === "" || firstName === "" || lastName === "") {
@@ -81,7 +81,9 @@ async function signInWithGoogle() {
     const { idToken } = await GoogleSignin.signIn()
     const googleCredential = GoogleAuthProvider.credential(idToken)
     await signInWithCredential(auth, googleCredential)
-    await addUserToDb(auth.currentUser)
+    if (!await getUserById(auth.currentUser.uid)) {
+        await addUserToDb(auth.currentUser)   
+    }
 }
 
 async function signOutFromApp() {

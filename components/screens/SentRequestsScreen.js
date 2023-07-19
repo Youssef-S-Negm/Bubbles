@@ -1,10 +1,63 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { cancelRequest } from '../../db/users'
+import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
+import { MaterialIcons } from '@expo/vector-icons'
 
-const SentRequestsScreen = () => {
+const NoSentRequests = () => {
+  return (
+    <MaskedView
+      style={{ flex: 1, flexDirection: 'row' }}
+      maskElement={
+        <View style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+          <MaterialIcons name="cancel-schedule-send" style={{ fontSize: 60 }} />
+          <Text style={{ fontSize: 20, color: 'black', fontWeight: 'bold' }}>You haven't sent any requests recently</Text>
+        </View>
+      }
+    >
+      <LinearGradient
+        colors={['#00736e', '#6a00c9']}
+        style={{ flex: 1 }}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+    </MaskedView>
+  )
+}
+
+const SentRequestsScreen = ({ sentRequests }) => {
+
+  const UserItem = ({ item }) => {
+    return (
+      <View style={{ flexDirection: 'row', width: '100%', padding: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#EBEBE4', elevation: 5 }}>
+        <Image
+          source={item.photoURL ? { uri: item.photoURL } : require('../../assets/avatar.png')}
+          style={{ height: 50, width: 50, borderRadius: 50, backgroundColor: 'white' }}
+        />
+        <Text style={{ paddingLeft: 8 }}>{item.displayName}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <TouchableOpacity
+            onPress={async () => {
+              await cancelRequest(item.id)
+            }}
+          >
+            <Text style={{ color: 'red' }}>Cancel request</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      <Text>SentRequestsScreen</Text>
+      {sentRequests.length === 0 ?
+        <NoSentRequests /> :
+        <FlatList
+          data={sentRequests}
+          renderItem={({ item }) => <UserItem item={item} />}
+          keyExtractor={item => item.id}
+          ItemSeparatorComponent={<View style={{ height: 8 }} />}
+        />}
     </View>
   )
 }

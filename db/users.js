@@ -1,6 +1,7 @@
 import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { auth, db } from "./config";
 import { updateProfile } from "firebase/auth";
+import { ToastAndroid } from "react-native";
 
 async function addUserToDb(user) {
     try {
@@ -69,7 +70,6 @@ async function sendRequest(userToConnectId) {
     const currentUser = await getUserById(auth.currentUser.uid)
     if (currentUser.connections.includes(userToConnectId)) {
         alert('You are already connected!')
-        return
     }
 
     const currentUserRef = doc(db, 'users', auth.currentUser.uid)
@@ -122,4 +122,34 @@ async function refuseConnection(userId2) {
     })
 }
 
-export { addUserToDb, getUserById, updateUserInfo, userSubscribeListener, sendRequest, connectUsers, refuseConnection }
+async function cancelRequest(userToCancel) {
+    const currentUserDocRef = doc(db, 'users', auth.currentUser.uid)
+    const userToCancelRef = doc(db, 'users', userToCancel)
+    const toBeCancelled = await getUserById(userToCancel)
+
+    await updateDoc(currentUserDocRef, {
+        sentRequests: arrayRemove(userToCancel)
+    })
+
+    if (toBeCancelled.pendingRequests.length === 1) {
+        await updateDoc(userToCancelRef, {
+            pendingRequests: arrayRemove(auth.currentUser.uid),
+            pendingRequestsSeen: true
+        })
+    } else if (toBeCancelled.pendingRequests.length > 1) {
+        await updateDoc(userToCancelRef, {
+            pendingRequests: arrayRemove(auth.currentUser.uid),
+        })
+    }
+}
+
+export {
+    addUserToDb,
+    getUserById,
+    updateUserInfo,
+    userSubscribeListener,
+    sendRequest,
+    connectUsers,
+    refuseConnection,
+    cancelRequest
+}

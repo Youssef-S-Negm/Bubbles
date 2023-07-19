@@ -1,7 +1,30 @@
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { connectUsers, refuseConnection } from '../../db/users'
 import { Image } from 'react-native'
-import { MaterialIcons, Entypo } from '@expo/vector-icons'
+import { MaterialIcons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
+
+const NoPendingRequests = () => {
+  return (
+    <MaskedView
+      style={{ flex: 1, flexDirection: 'row' }}
+      maskElement={
+        <View style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+          <MaterialIcons name="pending" style={{ fontSize: 60 }} />
+          <Text style={{ fontSize: 20, color: 'black', fontWeight: 'bold' }}>You don't have pending requests</Text>
+        </View>
+      }
+    >
+      <LinearGradient
+        colors={['#00736e', '#6a00c9']}
+        style={{ flex: 1 }}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+    </MaskedView>
+  )
+}
 
 const PendingRequestsScreen = ({ pendingUsers }) => {
 
@@ -19,7 +42,7 @@ const PendingRequestsScreen = ({ pendingUsers }) => {
               await refuseConnection(item.id)
             }}
           >
-            <Entypo name='cross' style={{ fontSize: 24, color: 'red' }} />
+            <Text style={{ color: 'red' }}>Decline</Text>
           </TouchableOpacity>
           <View style={{ width: 32 }} />
           <TouchableOpacity
@@ -27,7 +50,7 @@ const PendingRequestsScreen = ({ pendingUsers }) => {
               await connectUsers(item.id)
             }}
           >
-            <MaterialIcons name='done' style={{ fontSize: 24, color: 'green' }} />
+            <Text style={{ color: 'green' }}>Accept</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -36,12 +59,15 @@ const PendingRequestsScreen = ({ pendingUsers }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={pendingUsers}
-        renderItem={({ item }) => <UserItem item={item} />}
-        keyExtractor={item => item.id}
-        ItemSeparatorComponent={<View style={{ height: 8 }} />}
-      />
+      {pendingUsers.length === 0 ?
+        <NoPendingRequests />
+        :
+        <FlatList
+          data={pendingUsers}
+          renderItem={({ item }) => <UserItem item={item} />}
+          keyExtractor={item => item.id}
+          ItemSeparatorComponent={<View style={{ height: 8 }} />}
+        />}
     </View>
   )
 }

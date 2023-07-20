@@ -15,6 +15,7 @@ import {
 import { auth, db } from "./config";
 import { updateProfile } from "firebase/auth";
 import { ToastAndroid } from "react-native";
+import { getChatById } from "./chats";
 
 async function addUserToDb(user) {
     try {
@@ -100,7 +101,7 @@ async function sendRequest(userToConnectId) {
 
 async function connectUsers(userId2) {
     const currentUser = await getUserById(auth.currentUser.uid)
-    
+
     if (currentUser.connections.includes(userId2)) {
         alert('You are already connected with this user')
     } else if (userId2 === auth.currentUser.uid) {
@@ -108,25 +109,51 @@ async function connectUsers(userId2) {
     } else {
         const userRef1 = doc(db, 'users', auth.currentUser.uid)
         const userRef2 = doc(db, 'users', userId2)
+        const currentUser = await getUserById(auth.currentUser.uid)
+        const userToBeAdded = await getUserById(userId2)
+        const commonChatsId = currentUser.chats.filter(chatId => userToBeAdded.chats.includes(chatId))
 
-        const chatDocRef = await addDoc(collection(db, 'chats'), {
-            chatType: 'private',
-            between: [auth.currentUser.uid, userId2],
-            messages: [],
-            updatedAt: serverTimestamp()
-        })
+        if (commonChatsId.length > 0) {
+            const commonChats = await Promise.all(commonChatsId.map(getChatById))
+            for (let i = 0; i < commonChats.length; i++) {
+                if (commonChats[i].chatType === 'private') {
+                    await updateDoc(doc(db, 'chats', commonChatsId[i]), {
+                        usersStatus: 'connected',
+                        updatedAt: serverTimestamp()
+                    })
+                    await updateDoc(userRef1, {
+                        connections: arrayUnion(userId2),
+                        pendingRequests: arrayRemove(userId2),
+                        pendingRequestsSeen: true
+                    })
+                    await updateDoc(userRef2, {
+                        connections: arrayUnion(auth.currentUser.uid),
+                        sentRequests: arrayRemove(auth.currentUser.uid)
+                    })
+                }
+            }
+        } else {
+            const chatDocRef = await addDoc(collection(db, 'chats'), {
+                chatType: 'private',
+                between: [auth.currentUser.uid, userId2],
+                messages: [],
+                usersStatus: 'connected',
+                updatedAt: serverTimestamp()
+            })
 
-        await updateDoc(userRef1, {
-            connections: arrayUnion(userId2),
-            chats: arrayUnion(chatDocRef.id),
-            pendingRequests: arrayRemove(userId2),
-            pendingRequestsSeen: true
-        })
-        await updateDoc(userRef2, {
-            connections: arrayUnion(auth.currentUser.uid),
-            chats: arrayUnion(chatDocRef.id),
-            sentRequests: arrayRemove(auth.currentUser.uid)
-        })
+            await updateDoc(userRef1, {
+                connections: arrayUnion(userId2),
+                chats: arrayUnion(chatDocRef.id),
+                pendingRequests: arrayRemove(userId2),
+                pendingRequestsSeen: true
+            })
+
+            await updateDoc(userRef2, {
+                connections: arrayUnion(auth.currentUser.uid),
+                chats: arrayUnion(chatDocRef.id),
+                sentRequests: arrayRemove(auth.currentUser.uid)
+            })
+        }
     }
 }
 
@@ -164,6 +191,32 @@ async function cancelRequest(userToCancel) {
     }
 }
 
+async function disconnectUsers(userToRemoveId) {
+    const currentUser = await getUserById(auth.currentUser.uid)
+    const userToBeRemoved = await getUserById(userToRemoveId)
+    const commonChatsId = currentUser.chats.filter(chatId => userToBeRemoved.chats.includes(chatId))
+    const commonChats = await Promise.all(commonChatsId.map(getChatById))
+    const currentUserRef = doc(db, 'users', auth.currentUser.uid)
+    const userToBeRemovedRef = doc(db, 'users', userToRemoveId)
+
+    for (let i = 0; i < commonChats.length; i++) {
+        if (commonChats[i].chatType === 'private') {
+            await updateDoc(doc(db, 'chats', commonChatsId[i]), {
+                usersStatus: 'disconnected',
+                updatedAt: serverTimestamp()
+            })
+        }
+    }
+
+    await updateDoc(currentUserRef, {
+        connections: arrayRemove(userToRemoveId)
+    })
+
+    await updateDoc(userToBeRemovedRef, {
+        connections: arrayRemove(auth.currentUser.uid)
+    })
+}
+
 export {
     addUserToDb,
     getUserById,
@@ -172,5 +225,6 @@ export {
     sendRequest,
     connectUsers,
     refuseConnection,
-    cancelRequest
+    cancelRequest,
+    disconnectUsers
 }

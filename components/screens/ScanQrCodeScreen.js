@@ -69,6 +69,7 @@ const ScanQrCodeScreen = ({ navigation, user }) => {
                                     <ConfirmAddUserButton
                                         setModalVisible={setModalVisible}
                                         setScanned={setScanned}
+                                        user={scannedUser}
                                         setUser={setScannedUser}
                                         navigation={navigation}
                                     />

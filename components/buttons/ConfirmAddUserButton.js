@@ -2,12 +2,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { MaterialIcons } from '@expo/vector-icons'
+import { connectUsers } from '../../db/users'
 
-const ConfirmAddUserButton = ({ setUser, setModalVisible, setScanned, navigation }) => {
+const ConfirmAddUserButton = ({ user, setUser, setModalVisible, setScanned, navigation }) => {
     return (
         <TouchableOpacity
-            onPress={() => {
-                //TODO create a chat between the current user and added usert
+            onPress={async () => {
+                await connectUsers(user.id)
                 setModalVisible(false)
                 setUser(null)
                 setScanned(false)

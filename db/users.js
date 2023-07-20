@@ -1,4 +1,17 @@
-import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import {
+    addDoc,
+    arrayRemove,
+    arrayUnion,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    query,
+    serverTimestamp,
+    setDoc,
+    updateDoc,
+    where
+} from "firebase/firestore";
 import { auth, db } from "./config";
 import { updateProfile } from "firebase/auth";
 import { ToastAndroid } from "react-native";
@@ -86,27 +99,35 @@ async function sendRequest(userToConnectId) {
 }
 
 async function connectUsers(userId2) {
-    const userRef1 = doc(db, 'users', auth.currentUser.uid)
-    const userRef2 = doc(db, 'users', userId2)
+    const currentUser = await getUserById(auth.currentUser.uid)
+    
+    if (currentUser.connections.includes(userId2)) {
+        alert('You are already connected with this user')
+    } else if (userId2 === auth.currentUser.uid) {
+        alert("You can't connect with your self")
+    } else {
+        const userRef1 = doc(db, 'users', auth.currentUser.uid)
+        const userRef2 = doc(db, 'users', userId2)
 
-    const chatDocRef = await addDoc(collection(db, 'chats'), {
-        chatType: 'private',
-        between: [auth.currentUser.uid, userId2],
-        messages: [],
-        updatedAt: serverTimestamp()
-    })
+        const chatDocRef = await addDoc(collection(db, 'chats'), {
+            chatType: 'private',
+            between: [auth.currentUser.uid, userId2],
+            messages: [],
+            updatedAt: serverTimestamp()
+        })
 
-    await updateDoc(userRef1, {
-        connections: arrayUnion(userId2),
-        chats: arrayUnion(chatDocRef.id),
-        pendingRequests: arrayRemove(userId2),
-        pendingRequestsSeen: true
-    })
-    await updateDoc(userRef2, {
-        connections: arrayUnion(auth.currentUser.uid),
-        chats: arrayUnion(chatDocRef.id),
-        sentRequests: arrayRemove(auth.currentUser.uid)
-    })
+        await updateDoc(userRef1, {
+            connections: arrayUnion(userId2),
+            chats: arrayUnion(chatDocRef.id),
+            pendingRequests: arrayRemove(userId2),
+            pendingRequestsSeen: true
+        })
+        await updateDoc(userRef2, {
+            connections: arrayUnion(auth.currentUser.uid),
+            chats: arrayUnion(chatDocRef.id),
+            sentRequests: arrayRemove(auth.currentUser.uid)
+        })
+    }
 }
 
 async function refuseConnection(userId2) {

@@ -6,7 +6,7 @@ async function getChatById(id) {
         const docRef = doc(db, 'chats', id)
         const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
-            return docSnap.data()
+            return {...docSnap.data(), id: docSnap.id}
         } else {
             return null
         }

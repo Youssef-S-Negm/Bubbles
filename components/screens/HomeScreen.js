@@ -30,7 +30,7 @@ const NoChats = () => {
     )
 }
 
-const ChatItem = ({ item }) => {
+const ChatItem = ({ item, navigation }) => {
     if (item.chatType === 'private') {
         const [otherUser, setOtherUser] = useState(null)
         const otherUserId = item.between.filter(e => e !== auth.currentUser.uid)[0]
@@ -43,7 +43,11 @@ const ChatItem = ({ item }) => {
         return (
             <TouchableOpacity
                 onPress={() => {
-                    //TODO
+                    navigation.navigate('Conversation', {
+                        chat: item,
+                        chatTitle: otherUser.displayName,
+                        otherUser: otherUser
+                    })
                 }}
                 style={{ flexDirection: 'row', width: '100%' }}
             >
@@ -82,7 +86,7 @@ const HomeScreen = ({ navigation }) => {
                 :
                 <FlatList
                     data={chats}
-                    renderItem={({ item }) => <ChatItem item={item} />}
+                    renderItem={({ item }) => <ChatItem item={item} navigation={navigation} />}
                     ItemSeparatorComponent={<View style={{ height: 8 }} />}
                     keyExtractor={item => item.id}
                 />}

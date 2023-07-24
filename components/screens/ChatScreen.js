@@ -183,38 +183,34 @@ const ChatScreen = ({ route, navigation }) => {
                     }
                 }}
             />
-            <TouchableOpacity
-                onPress={() => {
-                    scrollToBottom()
-                }}
-                style={{
-                    position: 'absolute',
-                    alignSelf: 'flex-end',
-                    top: '80%',
-                    right: 8
-                }}
-            >
-                <View style={{ backgroundColor: '#e4e4e4', padding: 4, borderRadius: 6 }}>
-                    <AntDesign name='down' style={{ fontSize: 20 }} />
+            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent:'space-between'}}>
+                <View style={styles.inputView}>
+                    <TextInput
+                        placeholder='Type your message here'
+                        value={message}
+                        onChangeText={e => setMessage(e)}
+                        multiline={true}
+                        style={styles.messageTextInput}
+                    />
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (message.length > 0) {
+                                sendMessage(chat.id, message)
+                                setMessage('')
+                            }
+                        }}
+                    >
+                        <Ionicons name='send' style={styles.sendIcon} />
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
-            <View style={styles.inputView}>
-                <TextInput
-                    placeholder='Type your message here'
-                    value={message}
-                    onChangeText={e => setMessage(e)}
-                    multiline={true}
-                    style={styles.messageTextInput}
-                />
                 <TouchableOpacity
                     onPress={() => {
-                        if (message.length > 0) {
-                            sendMessage(chat.id, message)
-                            setMessage('')
-                        }
+                        scrollToBottom()
                     }}
                 >
-                    <Ionicons name='send' style={styles.sendIcon} />
+                    <View style={{ backgroundColor: '#e4e4e4', padding: 4, borderRadius: 6 }}>
+                        <AntDesign name='down' style={{ fontSize: 20 }} />
+                    </View>
                 </TouchableOpacity>
             </View>
         </View>
@@ -236,14 +232,16 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         padding: 8,
         alignItems: 'center',
-        marginTop: 8
+        marginTop: 8,
+        flex: 1,
+        marginRight: 8
     },
     sendIcon: {
         fontSize: 20,
     },
     messageTextInput: {
         paddingRight: 8,
-        width: '94%'
+        flex: 1
     },
     centeredView: {
         flex: 1,

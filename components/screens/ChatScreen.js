@@ -1,4 +1,4 @@
-import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { getChatById, sendMessage } from '../../db/chats'
 import { Ionicons, AntDesign } from '@expo/vector-icons';
@@ -6,14 +6,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
 import { auth, db } from '../../db/config';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { useScrollToTop } from '@react-navigation/native';
+import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
+import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
 
-const MessageItem = ({ item, sender }) => {
+const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     if (sender.id === auth.currentUser.uid) {
+        const date = new Date(item.sentAt)
+        const formatted = date.getHours() + ':' + date.getMinutes()
+
         return (
             <TouchableOpacity
-                onPress={() => {
-                    //TODO
+                onLongPress={() => {
+                    setSentAt(item.sentAt)
+                    setDeletdedMessage(item.message)
+                    setModalVisible(true)
                 }}
                 style={{ alignSelf: 'flex-end' }}
             >
@@ -31,11 +37,14 @@ const MessageItem = ({ item, sender }) => {
                 >
                     <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
                     <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{item.message}</Text>
-                    <Text style={{ color: 'white', fontSize: 10 }}>{item.sentAt}</Text>
+                    <Text style={{ color: 'white', fontSize: 10 }}>{formatted}</Text>
                 </LinearGradient>
             </TouchableOpacity>
         )
     } else {
+        const date = new Date(item.sentAt)
+        const formatted = date.getHours() + ':' + date.getMinutes()
+
         return (
             <View style={{
                 alignSelf: 'flex-start',
@@ -48,10 +57,45 @@ const MessageItem = ({ item, sender }) => {
             }}>
                 <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
                 <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{item.message}</Text>
-                <Text style={{ color: 'black', fontSize: 10 }}>{item.sentAt}</Text>
+                <Text style={{ color: 'black', fontSize: 10 }}>{formatted}</Text>
             </View>
         )
     }
+}
+
+const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, sentAt, chatId }) => {
+    return (
+        <Modal
+            animationType='slide'
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+                setMessage('')
+                setSentAt('')
+                setModalVisible(false)
+            }}
+        >
+            <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                    <Text style={{ paddingBottom: 8, fontWeight: 'bold', fontSize: 16 }}>Would like to delete this message?</Text>
+                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{message}</Text>
+                    <View style={{ flexDirection: 'row', paddingTop: 8 }}>
+                        <RejectDeleteMessageButton
+                            setModalVisible={setModalVisible}
+                            setMessage={setMessage}
+                        />
+                        <View style={{ width: 32 }} />
+                        <ConfirmDeleteMessageButton
+                            setModalVisible={setModalVisible}
+                            sentAt={sentAt}
+                            chatId={chatId}
+                            message={message}
+                        />
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    )
 }
 
 const ChatScreen = ({ route, navigation }) => {
@@ -59,8 +103,10 @@ const ChatScreen = ({ route, navigation }) => {
     const [messages, setMessages] = useState([])
     const [message, setMessage] = useState('')
     const [usersMap, setUsersMap] = useState(new Map())
+    const [deletdedMessage, setDeletdedMessage] = useState('')
+    const [modalVisible, setModalVisible] = useState(false)
+    const [sentAt, setSentAt] = useState('')
     const flatListRef = useRef()
-    useScrollToTop(flatListRef)
 
     const scrollToBottom = () => {
         flatListRef.current.scrollToEnd({ animated: true });
@@ -106,9 +152,24 @@ const ChatScreen = ({ route, navigation }) => {
 
     return (
         <View style={styles.container}>
+            <ConfirmDeleteModal
+                message={deletdedMessage}
+                modalVisible={modalVisible}
+                setMessage={setDeletdedMessage}
+                setModalVisible={setModalVisible}
+                setSentAt={setSentAt}
+                sentAt={sentAt}
+                chatId={chat.id}
+            />
             <FlatList
                 data={messages}
-                renderItem={({ item }) => <MessageItem item={item} sender={usersMap.get(item.sender)} />}
+                renderItem={({ item }) => <MessageItem
+                    item={item}
+                    sender={usersMap.get(item.sender)}
+                    setDeletdedMessage={setDeletdedMessage}
+                    setModalVisible={setModalVisible}
+                    setSentAt={setSentAt}
+                />}
                 ItemSeparatorComponent={<View style={{ height: 8 }} />}
                 ref={flatListRef}
                 onLayout={() => {
@@ -129,7 +190,7 @@ const ChatScreen = ({ route, navigation }) => {
                 style={{
                     position: 'absolute',
                     alignSelf: 'flex-end',
-                    top: '87%',
+                    top: '80%',
                     right: 8
                 }}
             >
@@ -183,5 +244,20 @@ const styles = StyleSheet.create({
     messageTextInput: {
         paddingRight: 8,
         width: '94%'
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        elevation: 5
     }
 })

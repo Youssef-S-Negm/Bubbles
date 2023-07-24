@@ -1,4 +1,4 @@
-import { arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { auth, db } from "./config";
 import { ToastAndroid } from "react-native";
 
@@ -20,18 +20,12 @@ async function sendMessage(chatId, message) {
     try {
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
-        let formattedDate = date.getHours() + ":" + date.getMinutes()
-        if (date.getHours() < 12) {
-            formattedDate += 'am'
-        } else {
-            formattedDate += 'pm'
-        }
 
         await updateDoc(docRef, {
             messages: arrayUnion({
                 message: message,
                 sender: auth.currentUser.uid,
-                sentAt: formattedDate
+                sentAt: date.toISOString()
             }),
             updatedAt: serverTimestamp()
         })
@@ -41,4 +35,22 @@ async function sendMessage(chatId, message) {
     }
 }
 
-export { getChatById, sendMessage }
+async function deleteMessage(chatId, sentAt, message) {
+    try {
+        const docRef = doc(db, 'chats', chatId)
+
+        await updateDoc(docRef, {
+            messages: arrayRemove({
+                sender: auth.currentUser.uid,
+                sentAt: sentAt,
+                message: message
+            })
+        })
+
+        ToastAndroid.show('Message deleted!', ToastAndroid.SHORT)
+    } catch (err) {
+        console.log("Couldn't delete message:", err);
+    }
+}
+
+export { getChatById, sendMessage, deleteMessage }

@@ -1,7 +1,7 @@
 import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { getChatById, sendMessage } from '../../db/chats'
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
 import { auth, db } from '../../db/config';
@@ -122,6 +122,21 @@ const ChatScreen = ({ route, navigation }) => {
                     }
                 }}
             />
+            <TouchableOpacity
+                onPress={() => {
+                    scrollToBottom()
+                }}
+                style={{
+                    position: 'absolute',
+                    alignSelf: 'flex-end',
+                    top: '87%',
+                    right: 8
+                }}
+            >
+                <View style={{ backgroundColor: '#e4e4e4', padding: 4, borderRadius: 6 }}>
+                    <AntDesign name='down' style={{ fontSize: 20 }} />
+                </View>
+            </TouchableOpacity>
             <View style={styles.inputView}>
                 <TextInput
                     placeholder='Type your message here'

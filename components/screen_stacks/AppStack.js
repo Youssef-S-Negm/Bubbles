@@ -1,6 +1,5 @@
 import { StyleSheet } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
-import HomeScreen from '../screens/HomeScreen'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import ChatTab from '../tabs/ChatTab'
 import FindTab from '../tabs/FindTab'
@@ -9,6 +8,7 @@ import ProfileTab from '../tabs/ProfileTab'
 import FindUserStack from './FindUserStack'
 import ConnectionsStack from './ConnectionsStack'
 import ConnectionsTab from '../tabs/ConnectionsTab'
+import ChatStack from './ChatStack'
 
 const Tab = createBottomTabNavigator()
 
@@ -20,7 +20,7 @@ const AppTabs = ({ user, setUser }) => {
                 tabBarShowLabel: false,
                 tabBarStyle: styles.tabBarStyle,
                 tabBarIcon: ({ focused }) => {
-                    if (route.name === 'Chats') {
+                    if (route.name === 'Home') {
                         return <ChatTab focused={focused} />
                     } else if (route.name === 'Find') {
                         return <FindTab focused={focused} />
@@ -33,10 +33,12 @@ const AppTabs = ({ user, setUser }) => {
             })}
         >
             <Tab.Screen
-                name='Chats'
-            >
-                {(props) => <HomeScreen {...props} user={user} />}
-            </Tab.Screen>
+                name='Home'
+                component={ChatStack}
+                options={{
+                    headerShown: false
+                }}
+            />
             <Tab.Screen
                 name='Find'
                 options={{

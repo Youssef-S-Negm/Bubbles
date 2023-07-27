@@ -1,25 +1,42 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { signUp } from '../../db/auth'
+import MaskedView from '@react-native-masked-view/masked-view'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-const SignUpButton = ({ email, password, confirmPassword, firstName, lastName, navigation }) => {
+const SignUpButton = ({ email, password, confirmPassword, username, navigation }) => {
     return (
         <TouchableOpacity
             style={styles.container}
             onPress={async () => {
-                await signUp(email, password, confirmPassword, firstName, lastName)
+                await signUp(email, password, confirmPassword, username)
                 navigation.goBack()
             }}
         >
             <LinearGradient
-                colors={['#c4ddfe', '#fed8f7']}
-                start={{ x: 0.3, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                colors={['#00736e', '#6a00c9']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0, y: 1 }}
                 style={styles.gradient}
             >
-                <View style={styles.buttonText}>
-                    <Text style={styles.signUpText}>Sign Up</Text>
+                <View style={styles.buttonInfoView}>
+                    <MaskedView
+                        maskElement={
+                            <View style={styles.iconView}>
+                                <MaterialCommunityIcons name="account-plus" style={styles.icon} />
+                            </View>
+                        }
+                    >
+                        <LinearGradient
+                            colors={['#00736e', '#6a00c9']}
+                            start={{ x: 1, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={styles.iconGradient}
+                        />
+                    </MaskedView>
+                    <View style={{ width: '100%' }}>
+                        <Text style={styles.buttonText}>Sign Up</Text>
+                    </View>
                 </View>
             </LinearGradient>
         </TouchableOpacity>
@@ -30,19 +47,33 @@ export default SignUpButton
 
 const styles = StyleSheet.create({
     container: {
-        flex: 0.7
+        width: '70%'
     },
-    signUpText: {
-        textAlign: 'center',
-        fontSize: 20
+    iconView: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    iconGradient: {
+        flex: 1,
+        width: 30
     },
     gradient: {
         borderRadius: 6,
-        padding: 2.5,
+        padding: 2.5
     },
-    buttonText: {
+    buttonInfoView: {
         backgroundColor: 'white',
         padding: 6,
-        borderRadius: 6
+        borderRadius: 6,
+        flexDirection: 'row',
+    },
+    icon: {
+        fontSize: 20
+    },
+    buttonText: {
+        fontSize: 20,
+        left: '25%'
     }
 })

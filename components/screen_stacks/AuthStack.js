@@ -12,7 +12,13 @@ const AuthStack = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                <Stack.Screen name='Sign In' component={SignInScreen} />
+                <Stack.Screen
+                    name='Sign In'
+                    component={SignInScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
                 <Stack.Screen name='Sign Up' component={SignUpScreen} />
                 <Stack.Screen name='Forgot password' component={ForgotPasswordScreen} />
             </Stack.Navigator>

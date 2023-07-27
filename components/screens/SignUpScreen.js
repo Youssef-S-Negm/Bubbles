@@ -1,62 +1,62 @@
 import { StyleSheet, TextInput, View } from 'react-native'
 import { useState } from 'react'
 import SignUpButton from '../buttons/SignUpButton'
+import { Ionicons, AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
 
 const SignUpScreen = ({ navigation }) => {
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
+    const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
     return (
         <View style={styles.container}>
-            <View style={styles.nameView}>
+            <View style={styles.textInputView}>
+                <Ionicons name='person-outline' style={styles.icon} />
                 <TextInput
-                    placeholder='First name'
-                    style={styles.nameTextInput}
-                    value={firstName}
-                    onChangeText={e => setFirstName(e)}
-                />
-                <View style={{ width: 6 }} />
-                <TextInput
-                    placeholder='Last name'
-                    style={styles.nameTextInput}
-                    value={lastName}
-                    onChangeText={e => setLastName(e)}
+                    placeholder='Username'
+                    style={styles.textInput}
+                    value={username}
+                    onChangeText={e => setUsername(e)}
                 />
             </View>
-            <TextInput
-                placeholder='user@example.com'
-                keyboardType='email-address'
-                style={styles.otherTextInputs}
-                value={email}
-                onChangeText={e => setEmail(e)}
-            />
-            <View style={{ height: 8 }} />
-            <TextInput
-                placeholder='Password'
-                style={styles.otherTextInputs}
-                secureTextEntry={true}
-                value={password}
-                onChangeText={e => setPassword(e)}
-            />
-            <View style={{ height: 8 }} />
-            <TextInput
-                placeholder='Confirm password'
-                style={styles.otherTextInputs}
-                secureTextEntry={true}
-                value={confirmPassword}
-                onChangeText={e => setConfirmPassword(e)}
-            />
+            <View style={styles.textInputView}>
+                <AntDesign name="mail" style={styles.icon} />
+                <TextInput
+                    placeholder='user@example.com'
+                    keyboardType='email-address'
+                    style={styles.textInput}
+                    value={email}
+                    onChangeText={e => setEmail(e)}
+                />
+            </View>
+            <View style={styles.textInputView}>
+                <MaterialCommunityIcons name='form-textbox-password' style={styles.icon} />
+                <TextInput
+                    placeholder='Password'
+                    style={styles.textInput}
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={e => setPassword(e)}
+                />
+            </View>
+            <View style={styles.textInputView}>
+                <MaterialCommunityIcons name='form-textbox-password' style={styles.icon} />
+                <TextInput
+                    placeholder='Confirm password'
+                    style={styles.textInput}
+                    secureTextEntry={true}
+                    value={confirmPassword}
+                    onChangeText={e => setConfirmPassword(e)}
+                />
+            </View>
             <View style={{ height: 32 }} />
             <View style={styles.signUpButtonView}>
                 <SignUpButton
                     email={email}
                     password={password}
                     confirmPassword={confirmPassword}
-                    firstName={firstName}
-                    lastName={lastName}
+                    username={username}
                     navigation={navigation}
                 />
             </View>
@@ -70,26 +70,32 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
-        paddingTop: 32
+        backgroundColor: 'white',
+        paddingTop: 8,
+        paddingHorizontal: 8
     },
     nameView: {
         alignSelf: 'stretch',
         flexDirection: 'row',
         paddingBottom: 8
     },
-    nameTextInput: {
-        flex: 0.5,
-        borderWidth: 1,
-        padding: 8,
-        borderRadius: 6,
-    },
-    otherTextInputs: {
+    textInput: {
         alignSelf: 'stretch',
-        borderWidth: 1,
-        padding: 8,
-        borderRadius: 6,
+        marginLeft: 8
     },
     signUpButtonView: {
         flexDirection: 'row'
+    },
+    textInputView: {
+        width: '100%',
+        flexDirection: 'row',
+        padding: 8,
+        borderWidth: 1,
+        borderRadius: 6,
+        marginBottom: 8,
+        alignItems: 'center'
+    },
+    icon: {
+        fontSize: 20
     }
 })

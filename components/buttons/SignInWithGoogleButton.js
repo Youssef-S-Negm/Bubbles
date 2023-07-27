@@ -8,6 +8,9 @@ const SignInWithGoogleButton = () => {
             onPress={() => {
                 signInWithGoogle()
             }}
+            style={{
+                width: '70%'
+            }}
         >
             <View style={styles.container}>
                 <Image
@@ -31,7 +34,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 6,
         borderWidth: 1,
-        paddingLeft: 8
+        paddingLeft: 8,
+        width: '100%'
     },
     imgae: {
         height: 35,
@@ -40,8 +44,8 @@ const styles = StyleSheet.create({
         borderRadius: 6
     },
     text: {
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
         fontSize: 20,
-        color: 'black'
+        color: 'black',
     }
 })

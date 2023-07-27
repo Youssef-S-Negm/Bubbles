@@ -10,9 +10,10 @@ import {
 import { auth } from "./config";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { addUserToDb, getUserById } from "./users";
+import { ToastAndroid } from "react-native";
 
-async function signUp(email, password, confirmPassword, firstName, lastName) {
-    if (password === "" || email === "" || firstName === "" || lastName === "") {
+async function signUp(email, password, confirmPassword, username) {
+    if (password === "" || email === "" || username === "") {
         alert("Empty fields aren't allowed")
     } else {
         if (password === confirmPassword) {
@@ -28,10 +29,11 @@ async function signUp(email, password, confirmPassword, firstName, lastName) {
 
             if (userCredential && auth.currentUser) {
                 await updateProfile(auth.currentUser, {
-                    displayName: firstName + " " + lastName
+                    displayName: username
                 })
                 await addUserToDb(auth.currentUser)
             }
+            ToastAndroid.show('Account created!', ToastAndroid.SHORT)
         } else {
             alert("Password and confirm password doesn't match")
         }

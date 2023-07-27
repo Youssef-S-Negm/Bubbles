@@ -1,6 +1,6 @@
 import { FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
-import { getChatById, sendMessage } from '../../db/chats'
+import { decryptMessage, getChatById, sendMessage } from '../../db/chats'
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
@@ -36,7 +36,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                     }}
                 >
                     <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
-                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{item.message}</Text>
+                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
                     <Text style={{ color: 'white', fontSize: 10 }}>{formatted}</Text>
                 </LinearGradient>
             </TouchableOpacity>
@@ -56,7 +56,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 marginRight: 70
             }}>
                 <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
-                <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{item.message}</Text>
+                <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
                 <Text style={{ color: 'black', fontSize: 10 }}>{formatted}</Text>
             </View>
         )
@@ -78,7 +78,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     <Text style={{ paddingBottom: 8, fontWeight: 'bold', fontSize: 16 }}>Would like to delete this message?</Text>
-                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{message}</Text>
+                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{decryptMessage(message)}</Text>
                     <View style={{ flexDirection: 'row', paddingTop: 8 }}>
                         <RejectDeleteMessageButton
                             setModalVisible={setModalVisible}
@@ -183,7 +183,7 @@ const ChatScreen = ({ route, navigation }) => {
                     }
                 }}
             />
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent:'space-between'}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={styles.inputView}>
                     <TextInput
                         placeholder='Type your message here'

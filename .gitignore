@@ -18,3 +18,5 @@ web-build/
 
 #Google services file
 google-services.json
+
+.env

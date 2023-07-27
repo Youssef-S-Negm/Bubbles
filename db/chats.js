@@ -1,6 +1,8 @@
-import { arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import { arrayRemove, arrayUnion, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 import { ToastAndroid } from "react-native";
+import CryptoJS from 'react-native-crypto-js'
+import { TEXT_KEY } from '@env'
 
 async function getChatById(id) {
     try {
@@ -20,10 +22,11 @@ async function sendMessage(chatId, message) {
     try {
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
+        let cipherText = CryptoJS.AES.encrypt(message, TEXT_KEY).toString()
 
         await updateDoc(docRef, {
             messages: arrayUnion({
-                message: message,
+                message: cipherText,
                 sender: auth.currentUser.uid,
                 sentAt: date.toISOString()
             }),
@@ -53,4 +56,9 @@ async function deleteMessage(chatId, sentAt, message) {
     }
 }
 
-export { getChatById, sendMessage, deleteMessage }
+function decryptMessage(message) {
+    let bytes = CryptoJS.AES.decrypt(message, TEXT_KEY)
+    return bytes.toString(CryptoJS.enc.Utf8)
+}
+
+export { getChatById, sendMessage, deleteMessage, decryptMessage }

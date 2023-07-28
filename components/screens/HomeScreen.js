@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons';
 import { getUserById } from '../../db/users';
 import { auth } from '../../db/config';
-import { getChatById } from '../../db/chats';
+import { chatsSubscribeListener, getChatById } from '../../db/chats';
 
 const NoChats = () => {
     return (
@@ -77,6 +77,24 @@ const HomeScreen = ({ navigation }) => {
                         setChats(e)
                     })
             })
+
+        const unsubscribe = chatsSubscribeListener(({ change }) => {
+            if (change.type === 'modified' || change.type === 'removed' || change.type === 'added') {
+                getUserById(auth.currentUser.uid)
+                    .then(user => {
+                        Promise.all(user.chats.map(getChatById))
+                            .then(e => {
+                                e.sort((a, b) => a.updatedAt.seconds - b.updatedAt.seconds)
+                                e.reverse()
+                                setChats(e)
+                            })
+                    })
+            }
+        })
+
+        return () => {
+            unsubscribe()
+        }
     }, [])
 
     return (

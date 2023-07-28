@@ -1,4 +1,4 @@
-import { arrayRemove, arrayUnion, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
@@ -60,4 +60,13 @@ function decryptMessage(message) {
     return bytes.toString(CryptoJS.enc.Utf8)
 }
 
-export { getChatById, sendMessage, deleteMessage, decryptMessage }
+function chatsSubscribeListener(callback) {
+    const unsubscribe = onSnapshot(query(collection(db, "chats")), (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (callback) callback({ change });
+        });
+    });
+    return unsubscribe;
+}
+
+export { getChatById, sendMessage, deleteMessage, decryptMessage, chatsSubscribeListener }

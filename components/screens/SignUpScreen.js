@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         paddingBottom: 8
     },
     textInput: {
-        alignSelf: 'stretch',
+        width: '100%',
         marginLeft: 8
     },
     signUpButtonView: {

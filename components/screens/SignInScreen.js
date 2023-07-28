@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         padding: 8
     },
     textInput: {
-        alignSelf: 'stretch',
+        width: '100%',
         marginLeft: 8
     },
     forgotPasswordText: {

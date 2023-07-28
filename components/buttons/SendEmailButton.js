@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { resetPassword } from '../../db/auth'
+import MaskedView from '@react-native-masked-view/masked-view'
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const SendEmailButton = ({ email, navigation }) => {
     return (
@@ -11,14 +13,28 @@ const SendEmailButton = ({ email, navigation }) => {
                 navigation.goBack()
             }}
         >
-            <LinearGradient
-                colors={['#c4ddfe', '#fed8f7']}
-                start={{ x: 0.3, y: 0 }}
-                end={{ x: 1, y: 1 }}
+           <LinearGradient
+                colors={['#00736e', '#6a00c9']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0, y: 1 }}
                 style={styles.gradient}
             >
-                <View style={styles.buttonText}>
-                    <Text style={styles.sendText}>Send E-mail</Text>
+                <View style={styles.buttonInfoView}>
+                    <MaskedView
+                        maskElement={
+                            <View style={styles.iconView}>
+                                <MaterialCommunityIcons name='email-fast-outline' style={styles.icon} />
+                            </View>
+                        }
+                    >
+                        <LinearGradient
+                            colors={['#00736e', '#6a00c9']}
+                            start={{ x: 1, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={styles.iconGradient}
+                        />
+                    </MaskedView>
+                    <Text style={styles.buttonText}>Send E-mail</Text>
                 </View>
             </LinearGradient>
         </TouchableOpacity>
@@ -29,19 +45,34 @@ export default SendEmailButton
 
 const styles = StyleSheet.create({
     container: {
-        flex: 0.7,
+        flex: 0.7
     },
-    sendText: {
-        textAlign: 'center',
-        fontSize: 20
+    iconView: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    iconGradient: {
+        flex: 1,
+        width: 30
     },
     gradient: {
         borderRadius: 6,
-        padding: 2.5,
+        padding: 2.5
     },
-    buttonText: {
+    buttonInfoView: {
         backgroundColor: 'white',
         padding: 6,
-        borderRadius: 6
+        borderRadius: 6,
+        flexDirection: 'row',
+    },
+    icon: {
+        fontSize: 20
+    },
+    buttonText: {
+        fontSize: 20,
+        textAlign: 'center',
+        paddingLeft: 50
     }
 })

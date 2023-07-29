@@ -99,7 +99,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
 }
 
 const ChatScreen = ({ route, navigation }) => {
-    const { chatTitle, chat, otherUser } = route.params
+    const { chatType, metadata } = route.params
     const [messages, setMessages] = useState([])
     const [message, setMessage] = useState('')
     const [usersMap, setUsersMap] = useState(new Map())
@@ -116,38 +116,73 @@ const ChatScreen = ({ route, navigation }) => {
         navigation.setOptions({
             headerTitle: props => <Header {...props} />
         })
-        getChatById(chat.id)
-            .then(async e => {
-                await Promise.all(e.between.map(getUserById))
+        if (chatType === 'private') {
+            getChatById(metadata.chat.id)
+                .then(async e => {
+                    await Promise.all(e.between.map(getUserById))
+                        .then(users => {
+                            users.forEach(user => usersMap.set(user.id, user))
+                        })
+                    setMessages(e.messages)
+                })
+
+            const unsub = onSnapshot(doc(db, "chats", metadata.chat.id), async (doc) => {
+                await Promise.all(doc.data().between.map(getUserById))
                     .then(users => {
                         users.forEach(user => usersMap.set(user.id, user))
                     })
-                setMessages(e.messages)
-            })
+                setMessages(doc.data().messages)
+            });
 
-        const unsub = onSnapshot(doc(db, "chats", chat.id), async (doc) => {
-            await Promise.all(doc.data().between.map(getUserById))
-                .then(users => {
-                    users.forEach(user => usersMap.set(user.id, user))
+            return () => {
+                unsub()
+            }
+        } else if (chatType === 'group') {
+            getChatById(metadata.chat.id)
+                .then(async e => {
+                    await Promise.all(e.between.map(async user => await getUserById(user.id)))
+                        .then(users => {
+                            users.forEach(user => usersMap.set(user.id, user))
+                        })
+                    setMessages(e.messages)
                 })
-            setMessages(doc.data().messages)
-        });
 
-        return () => {
-            unsub()
+            const unsub = onSnapshot(doc(db, "chats", metadata.chat.id), async (doc) => {
+                await Promise.all(doc.data().between.map(async user => await getUserById(user.id)))
+                    .then(users => {
+                        users.forEach(user => usersMap.set(user.id, user))
+                    })
+                setMessages(doc.data().messages)
+            });
+
+            return () => {
+                unsub()
+            }
         }
     }, [])
 
     const Header = () => {
-        return (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image
-                    source={otherUser.photoURL ? { uri: otherUser.photoURL } : require('../../assets/avatar.png')}
-                    style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
-                />
-                <Text style={{ paddingLeft: 8, fontSize: 16 }}>{chatTitle}</Text>
-            </View>
-        )
+        if (chatType === 'private') {
+            return (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Image
+                        source={metadata.otherUser.photoURL ? { uri: metadata.otherUser.photoURL } : require('../../assets/avatar.png')}
+                        style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
+                    />
+                    <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
+                </View>
+            )
+        } else if (chatType === 'group') {
+            return (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Image
+                        source={metadata.chatPhoto ? { uri: metadata.chatPhoto } : require('../../assets/avatar.png')}
+                        style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
+                    />
+                    <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
+                </View>
+            )
+        }
     }
 
     return (
@@ -159,7 +194,7 @@ const ChatScreen = ({ route, navigation }) => {
                 setModalVisible={setModalVisible}
                 setSentAt={setSentAt}
                 sentAt={sentAt}
-                chatId={chat.id}
+                chatId={metadata.chat.id}
             />
             <FlatList
                 data={messages}
@@ -195,7 +230,7 @@ const ChatScreen = ({ route, navigation }) => {
                     <TouchableOpacity
                         onPress={() => {
                             if (message.length > 0) {
-                                sendMessage(chat.id, message)
+                                sendMessage(metadata.chat.id, message)
                                 setMessage('')
                             }
                         }}

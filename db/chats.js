@@ -1,4 +1,4 @@
-import { arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
@@ -69,4 +69,36 @@ function chatsSubscribeListener(callback) {
     return unsubscribe;
 }
 
-export { getChatById, sendMessage, deleteMessage, decryptMessage, chatsSubscribeListener }
+async function createGroupChat(groupName) {
+    try {
+        const docSnap = await addDoc(collection(db, 'chats'), {
+            groupName: groupName,
+            chatType: 'group',
+            between: [{
+                id: auth.currentUser.uid,
+                role: 'admin'
+            }],
+            messages: [],
+            photoURL: null,
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+            chats: arrayUnion(docSnap.id)
+        })
+
+        ToastAndroid.show(`${groupName} group created successfully!`, ToastAndroid.LONG)
+    } catch (err) {
+        console.log("Couldn't create group:", err);
+        ToastAndroid.show("Couldn't create group. Try agian later!", ToastAndroid.LONG)
+    }
+}
+
+export {
+    getChatById,
+    sendMessage,
+    deleteMessage,
+    decryptMessage,
+    chatsSubscribeListener,
+    createGroupChat
+}

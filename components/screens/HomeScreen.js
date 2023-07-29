@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getUserById } from '../../db/users';
 import { auth } from '../../db/config';
 import { chatsSubscribeListener, getChatById } from '../../db/chats';
+import NavigateToCreateGroupChatButton from '../buttons/NavigateToCreateGroupChatButton';
 
 const NoChats = () => {
     return (
@@ -44,9 +45,12 @@ const ChatItem = ({ item, navigation }) => {
             <TouchableOpacity
                 onPress={() => {
                     navigation.navigate('Conversation', {
-                        chat: item,
-                        chatTitle: otherUser.displayName,
-                        otherUser: otherUser
+                        metadata: {
+                            chat: item,
+                            chatTitle: otherUser.displayName,
+                            otherUser: otherUser,
+                        },
+                        chatType: 'private'
                     })
                 }}
                 style={{ flexDirection: 'row', width: '100%' }}
@@ -59,6 +63,30 @@ const ChatItem = ({ item, navigation }) => {
                         />
                         <Text style={{ paddingLeft: 8 }}>{otherUser.displayName}</Text>
                     </View> : null}
+            </TouchableOpacity>
+        )
+    } else if (item.chatType === 'group') {
+        return (
+            <TouchableOpacity
+                onPress={() => {
+                    navigation.navigate('Conversation', {
+                        metadata: {
+                            chat: item,
+                            chatTitle: item.groupName,
+                            chatPhoto: item.photoURL
+                        },
+                        chatType: 'group'
+                    })
+                }}
+                style={{ flexDirection: 'row', width: '100%' }}
+            >
+                <View style={{ flexDirection: 'row', backgroundColor: '#e4e4e4', width: '100%', padding: 8, alignItems: 'center', borderRadius: 6 }}>
+                    <Image
+                        source={item.photoURL ? { uri: item.photoURL } : require('../../assets/group-avatar.png')}
+                        style={{ height: 50, width: 50, borderRadius: 50, backgroundColor: 'white' }}
+                    />
+                    <Text style={{ paddingLeft: 8 }}>{item.groupName}</Text>
+                </View>
             </TouchableOpacity>
         )
     }
@@ -108,6 +136,7 @@ const HomeScreen = ({ navigation }) => {
                     ItemSeparatorComponent={<View style={{ height: 8 }} />}
                     keyExtractor={item => item.id}
                 />}
+            <NavigateToCreateGroupChatButton navigation={navigation} />
         </View>
     )
 }

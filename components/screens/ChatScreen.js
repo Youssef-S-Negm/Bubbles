@@ -1,7 +1,7 @@
 import { FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { decryptMessage, getChatById, sendMessage } from '../../db/chats'
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { Ionicons, AntDesign, SimpleLineIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
 import { auth, db } from '../../db/config';
@@ -98,14 +98,70 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
     )
 }
 
+const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chatId, between }) => {
+    return (
+        <Modal
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+            transparent={true}
+            style={{ flex: 1 }}
+            animationType='fade'
+        >
+            <View style={{
+                backgroundColor: 'white',
+                elevation: 5,
+                position: 'absolute',
+                alignSelf: 'flex-end',
+                right: 8,
+                top: 60,
+                padding: 8,
+                width: '32%',
+                borderRadius: 6
+            }}>
+                {
+                    userRole === 'admin' ?
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('Add user', {
+                                    chatId: chatId,
+                                    between: between
+                                })
+                                setModalVisible(false)
+                            }}
+                            style={{ width: '100%', marginBottom: 8 }}
+                        >
+                            <Text style={{ fontSize: 16 }}>Add user</Text>
+                        </TouchableOpacity>
+                        :
+                        null
+                }
+                <TouchableOpacity
+                onPress={() => {
+                    navigation.navigate('Group info')
+                    setModalVisible(false)
+                }}
+                    style={{ width: '100%', marginBottom: 8 }}
+                >
+                    <Text style={{ fontSize: 16 }}>Info</Text>
+                </TouchableOpacity>
+                <TouchableOpacity>
+                    <Text style={{ color: 'red', fontSize: 16 }}>Leave group</Text>
+                </TouchableOpacity>
+            </View>
+        </Modal>
+    )
+}
+
 const ChatScreen = ({ route, navigation }) => {
     const { chatType, metadata } = route.params
     const [messages, setMessages] = useState([])
     const [message, setMessage] = useState('')
     const [usersMap, setUsersMap] = useState(new Map())
     const [deletdedMessage, setDeletdedMessage] = useState('')
-    const [modalVisible, setModalVisible] = useState(false)
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+    const [chatOptionsModalVisbible, setChatOptionsModalVisbible] = useState(false)
     const [sentAt, setSentAt] = useState('')
+    const [currentUserRole, setCurrentUserRole] = useState(null)
     const flatListRef = useRef()
 
     const scrollToBottom = () => {
@@ -116,6 +172,7 @@ const ChatScreen = ({ route, navigation }) => {
         navigation.setOptions({
             headerTitle: props => <Header {...props} />
         })
+
         if (chatType === 'private') {
             getChatById(metadata.chat.id)
                 .then(async e => {
@@ -140,7 +197,12 @@ const ChatScreen = ({ route, navigation }) => {
         } else if (chatType === 'group') {
             getChatById(metadata.chat.id)
                 .then(async e => {
-                    await Promise.all(e.between.map(async user => await getUserById(user.id)))
+                    await Promise.all(e.between.map(async user => {
+                        if (user.id === auth.currentUser.uid) {
+                            setCurrentUserRole(user.role)
+                        }
+                        return await getUserById(user.id)
+                    }))
                         .then(users => {
                             users.forEach(user => usersMap.set(user.id, user))
                         })
@@ -174,12 +236,21 @@ const ChatScreen = ({ route, navigation }) => {
             )
         } else if (chatType === 'group') {
             return (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image
-                        source={metadata.chatPhoto ? { uri: metadata.chatPhoto } : require('../../assets/avatar.png')}
-                        style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
-                    />
-                    <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 0.9, justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Image
+                            source={metadata.chatPhoto ? { uri: metadata.chatPhoto } : require('../../assets/group-avatar.png')}
+                            style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
+                        />
+                        <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setChatOptionsModalVisbible(true)
+                        }}
+                    >
+                        <SimpleLineIcons name='options-vertical' size={16} />
+                    </TouchableOpacity>
                 </View>
             )
         }
@@ -189,12 +260,20 @@ const ChatScreen = ({ route, navigation }) => {
         <View style={styles.container}>
             <ConfirmDeleteModal
                 message={deletdedMessage}
-                modalVisible={modalVisible}
+                modalVisible={deleteModalVisible}
                 setMessage={setDeletdedMessage}
-                setModalVisible={setModalVisible}
+                setModalVisible={setDeleteModalVisible}
                 setSentAt={setSentAt}
                 sentAt={sentAt}
                 chatId={metadata.chat.id}
+            />
+            <ChatOptionsModal
+                modalVisible={chatOptionsModalVisbible}
+                setModalVisible={setChatOptionsModalVisbible}
+                navigation={navigation}
+                userRole={currentUserRole}
+                chatId={metadata.chat.id}
+                between={metadata.chat.between}
             />
             <FlatList
                 data={messages}
@@ -202,7 +281,7 @@ const ChatScreen = ({ route, navigation }) => {
                     item={item}
                     sender={usersMap.get(item.sender)}
                     setDeletdedMessage={setDeletdedMessage}
-                    setModalVisible={setModalVisible}
+                    setModalVisible={setDeleteModalVisible}
                     setSentAt={setSentAt}
                 />}
                 ItemSeparatorComponent={<View style={{ height: 8 }} />}

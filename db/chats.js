@@ -52,6 +52,7 @@ async function deleteMessage(chatId, sentAt, message) {
         ToastAndroid.show('Message deleted!', ToastAndroid.SHORT)
     } catch (err) {
         console.log("Couldn't delete message:", err);
+        ToastAndroid.show("Couldn't delete message. Try again later.", ToastAndroid.LONG)
     }
 }
 
@@ -94,11 +95,35 @@ async function createGroupChat(groupName) {
     }
 }
 
+async function addUserToGroupChat(chatId, userId) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const userRef = doc(db, 'users', userId)
+
+        await updateDoc(chatRef, {
+            between: arrayUnion({
+                id: userId,
+                role: 'user'
+            }),
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(userRef, {
+            chats: arrayUnion(chatId)
+        })
+        ToastAndroid.show('User added to group', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error adding user to group:', err);
+        ToastAndroid.show("Couldn't add user to group. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
     deleteMessage,
     decryptMessage,
     chatsSubscribeListener,
-    createGroupChat
+    createGroupChat,
+    addUserToGroupChat
 }

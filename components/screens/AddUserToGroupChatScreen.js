@@ -2,10 +2,11 @@ import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } 
 import { useState, useEffect } from 'react'
 import { Ionicons, Fontisto, MaterialIcons } from '@expo/vector-icons'
 import { getUserById } from '../../db/users'
-import { auth } from '../../db/config'
+import { auth, db } from '../../db/config'
 import { addUserToGroupChat } from '../../db/chats'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { LinearGradient } from 'expo-linear-gradient'
+import { doc, onSnapshot } from 'firebase/firestore'
 
 const NoUsersToAdd = () => {
   return (
@@ -68,7 +69,6 @@ const AddUserToGroupChatScreen = ({ route, navigation }) => {
         <TouchableOpacity
           onPress={async () => {
             await addUserToGroupChat(chatId, item.id)
-            navigation.goBack()
           }}
         >
           <Ionicons name='add' size={20} />
@@ -92,6 +92,29 @@ const AddUserToGroupChatScreen = ({ route, navigation }) => {
             setDisplayedUsers(filteredUsersArray)
           })
       })
+
+    const unsub = onSnapshot(doc(db, 'chats', chatId), async doc => {
+      const between = doc.data().between
+
+      getUserById(auth.currentUser.uid)
+        .then(async user => {
+          await Promise.all(user.connections.map(getUserById))
+            .then(users => {
+              const filteredUsersArray = users.filter(e => {
+                return !between.some(b => {
+                  return b.id === e.id
+                })
+              })
+              filteredUsersArray.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
+              setUsers(filteredUsersArray)
+              setDisplayedUsers(filteredUsersArray)
+            })
+        })
+    })
+
+    return () => {
+      unsub()
+    }
   }, [])
 
   useEffect(() => {

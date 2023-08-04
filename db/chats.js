@@ -79,6 +79,7 @@ async function createGroupChat(groupName) {
                 id: auth.currentUser.uid,
                 role: 'admin'
             }],
+            allParticipants: [auth.currentUser.uid],
             messages: [],
             photoURL: null,
             updatedAt: serverTimestamp()
@@ -105,12 +106,14 @@ async function addUserToGroupChat(chatId, userId) {
                 id: userId,
                 role: 'user'
             }),
+            allParticipants: arrayUnion(userId),
             updatedAt: serverTimestamp()
         })
 
         await updateDoc(userRef, {
             chats: arrayUnion(chatId)
         })
+        
         ToastAndroid.show('User added to group', ToastAndroid.LONG)
     } catch (err) {
         console.log('Error adding user to group:', err);
@@ -118,7 +121,7 @@ async function addUserToGroupChat(chatId, userId) {
     }
 }
 
-async function removeUserFromGroupChat(chatId, userId) {
+async function removeUserFromGroupChat(chatId, userId, userRole) {
     try {
         const chatRef = doc(db, 'chats', chatId)
         const userRef = doc(db, 'users', userId)
@@ -126,7 +129,7 @@ async function removeUserFromGroupChat(chatId, userId) {
         await updateDoc(chatRef, {
             between: arrayRemove({
                 id: userId,
-                role: 'user'
+                role: userRole
             }),
             updatedAt: serverTimestamp()
         })

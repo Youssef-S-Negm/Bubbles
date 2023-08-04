@@ -107,6 +107,12 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
             style={{ flex: 1 }}
             animationType='fade'
         >
+            <TouchableOpacity
+                onPress={() => {
+                    setModalVisible(false)
+                }}
+                style={{ flex: 1 }}
+            />
             <View style={{
                 backgroundColor: 'white',
                 elevation: 5,
@@ -136,14 +142,14 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                         null
                 }
                 <TouchableOpacity
-                onPress={() => {
-                    navigation.navigate('Group info', {
-                        between: between,
-                        userRole: userRole,
-                        chatId: chatId
-                    })
-                    setModalVisible(false)
-                }}
+                    onPress={() => {
+                        navigation.navigate('Group info', {
+                            between: between,
+                            userRole: userRole,
+                            chatId: chatId
+                        })
+                        setModalVisible(false)
+                    }}
                     style={{ width: '100%', marginBottom: 8 }}
                 >
                     <Text style={{ fontSize: 16 }}>Info</Text>

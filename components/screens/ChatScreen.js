@@ -137,7 +137,11 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                 }
                 <TouchableOpacity
                 onPress={() => {
-                    navigation.navigate('Group info')
+                    navigation.navigate('Group info', {
+                        between: between,
+                        userRole: userRole,
+                        chatId: chatId
+                    })
                     setModalVisible(false)
                 }}
                     style={{ width: '100%', marginBottom: 8 }}

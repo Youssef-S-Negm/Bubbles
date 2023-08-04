@@ -142,6 +142,31 @@ async function removeUserFromGroupChat(chatId, userId) {
     }
 }
 
+async function setUserAsGroupAdmin(chatId, userId) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const chat = await getChatById(chatId)
+        const between = chat.between
+
+        for (let i = 0; i < between.length; i++) {
+            if (between[i].id === userId) {
+                between[i].role = 'admin'
+                break
+            }
+        }
+
+        await updateDoc(chatRef, {
+            between: between,
+            updatedAt: serverTimestamp()
+        })
+
+        ToastAndroid.show("New admin added", ToastAndroid.SHORT)
+    } catch (err) {
+        console.log(err)
+        ToastAndroid.show("Couldn't add admin. Try again later", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -150,5 +175,6 @@ export {
     chatsSubscribeListener,
     createGroupChat,
     addUserToGroupChat,
-    removeUserFromGroupChat
+    removeUserFromGroupChat,
+    setUserAsGroupAdmin
 }

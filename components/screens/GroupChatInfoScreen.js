@@ -2,6 +2,8 @@ import { FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from
 import { useState, useEffect } from 'react'
 import { getUserById } from '../../db/users'
 import { removeUserFromGroupChat, setUserAsGroupAdmin } from '../../db/chats'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../../db/config'
 
 const EditGroupMemberModal = ({ modalVisible, setModalVisible, chatId, user, setUser }) => {
   if (user) {
@@ -69,10 +71,10 @@ const GroupChatInfoScreen = ({ navigation, route }) => {
   const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
-    const admins = []
-    const members = []
 
     const getUsers = async () => {
+      const admins = []
+      const members = []
       await Promise.all(between.map(async user => {
         const userObj = { ...await getUserById(user.id), role: user.role }
         return userObj
@@ -94,6 +96,36 @@ const GroupChatInfoScreen = ({ navigation, route }) => {
     }
 
     getUsers()
+
+    const unsub = onSnapshot(doc(db, 'chats', chatId), async doc => {
+      const chatDoc = doc.data()
+      const admins = []
+      const members = []
+
+      await Promise.all(chatDoc.between.map(async user => {
+        const userObj = { ...await getUserById(user.id), role: user.role }
+        return userObj
+      }))
+        .then(users => {
+          users.forEach(user => {
+            if (user.role === 'admin') {
+              admins.push(user)
+            }
+            if (user.role === 'user') {
+              members.push(user)
+            }
+          })
+
+          admins.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
+          members.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
+          setAdminMemebers(admins)
+          setGroupMemebers(members)
+        })
+    })
+
+    return () => {
+      unsub()
+    }
   }, [])
 
   const AdminUserItem = ({ item }) => {

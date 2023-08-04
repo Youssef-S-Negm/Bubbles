@@ -118,6 +118,30 @@ async function addUserToGroupChat(chatId, userId) {
     }
 }
 
+async function removeUserFromGroupChat(chatId, userId) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const userRef = doc(db, 'users', userId)
+
+        await updateDoc(chatRef, {
+            between: arrayRemove({
+                id: userId,
+                role: 'user'
+            }),
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(userRef, {
+            chats: arrayRemove(chatId)
+        })
+
+        ToastAndroid.show('User removed from group.', ToastAndroid.SHORT)
+    } catch (err) {
+        console.log('Error removing user from group:', err);
+        ToastAndroid.show("Couldn't remove user from group. Try again later", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -125,5 +149,6 @@ export {
     decryptMessage,
     chatsSubscribeListener,
     createGroupChat,
-    addUserToGroupChat
+    addUserToGroupChat,
+    removeUserFromGroupChat
 }

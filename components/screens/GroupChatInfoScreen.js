@@ -39,7 +39,7 @@ const EditGroupMemberModal = ({ modalVisible, setModalVisible, chatId, user, set
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={async () => {
-                  await removeUserFromGroupChat(chatId, user.id)
+                  await removeUserFromGroupChat(chatId, user.id, 'user')
                   setUser(null)
                   setModalVisible(false)
                 }}

@@ -1,7 +1,7 @@
 import { FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useState, useEffect } from 'react'
 import { getUserById } from '../../db/users'
-import { removeUserFromGroupChat } from '../../db/chats'
+import { removeUserFromGroupChat, setUserAsGroupAdmin } from '../../db/chats'
 
 const EditGroupMemberModal = ({ modalVisible, setModalVisible, chatId, user, setUser }) => {
   if (user) {
@@ -45,7 +45,8 @@ const EditGroupMemberModal = ({ modalVisible, setModalVisible, chatId, user, set
                 <Text style={{ color: 'red', fontSize: 18 }}>Remove</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {
+                onPress={async () => {
+                  await setUserAsGroupAdmin(chatId, user.id)
                   setUser(null)
                   setModalVisible(false)
                 }}
@@ -65,7 +66,7 @@ const GroupChatInfoScreen = ({ navigation, route }) => {
   const [adminMemebers, setAdminMemebers] = useState([])
   const [groupMemebers, setGroupMemebers] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
-  const [userToRemove, setUserToRemove] = useState(null)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     const admins = []
@@ -115,7 +116,7 @@ const GroupChatInfoScreen = ({ navigation, route }) => {
         style={{ padding: 8, backgroundColor: '#e4e4e4', borderRadius: 6, flexDirection: 'row', alignItems: 'center' }}
         onPress={() => {
           if (userRole === 'admin') {
-            setUserToRemove(item)
+            setSelectedUser(item)
             setModalVisible(true)
           }
         }}
@@ -137,8 +138,8 @@ const GroupChatInfoScreen = ({ navigation, route }) => {
         chatId={chatId}
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
-        setUser={setUserToRemove}
-        user={userToRemove}
+        setUser={setSelectedUser}
+        user={selectedUser}
       />
       <Text style={{ ...styles.title, marginTop: 0 }}>Group admins</Text>
       <FlatList

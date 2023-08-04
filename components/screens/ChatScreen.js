@@ -1,6 +1,6 @@
 import { FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
-import { decryptMessage, getChatById, sendMessage } from '../../db/chats'
+import { decryptMessage, getChatById, removeUserFromGroupChat, sendMessage } from '../../db/chats'
 import { Ionicons, AntDesign, SimpleLineIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
@@ -12,7 +12,7 @@ import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     if (sender.id === auth.currentUser.uid) {
         const date = new Date(item.sentAt)
-        const formatted = date.getHours() + ':' + date.getMinutes()
+        const formattedDate = date.getHours() + ':' + date.getMinutes()
 
         return (
             <TouchableOpacity
@@ -37,13 +37,13 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 >
                     <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
                     <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
-                    <Text style={{ color: 'white', fontSize: 10 }}>{formatted}</Text>
+                    <Text style={{ color: 'white', fontSize: 10 }}>{formattedDate}</Text>
                 </LinearGradient>
             </TouchableOpacity>
         )
     } else {
         const date = new Date(item.sentAt)
-        const formatted = date.getHours() + ':' + date.getMinutes()
+        const formattedDate = date.getHours() + ':' + date.getMinutes()
 
         return (
             <View style={{
@@ -57,7 +57,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
             }}>
                 <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
                 <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
-                <Text style={{ color: 'black', fontSize: 10 }}>{formatted}</Text>
+                <Text style={{ color: 'black', fontSize: 10 }}>{formattedDate}</Text>
             </View>
         )
     }
@@ -77,7 +77,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
         >
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
-                    <Text style={{ paddingBottom: 8, fontWeight: 'bold', fontSize: 16 }}>Would like to delete this message?</Text>
+                    <Text style={styles.modalTitle}>Would like to delete this message?</Text>
                     <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{decryptMessage(message)}</Text>
                     <View style={{ flexDirection: 'row', paddingTop: 8 }}>
                         <RejectDeleteMessageButton
@@ -98,7 +98,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
     )
 }
 
-const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chatId, between }) => {
+const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chatId, between, setLeaveGroupModalVisble }) => {
     return (
         <Modal
             visible={modalVisible}
@@ -154,9 +154,49 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                 >
                     <Text style={{ fontSize: 16 }}>Info</Text>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => {
+                        setLeaveGroupModalVisble(true)
+                    }}
+                >
                     <Text style={{ color: 'red', fontSize: 16 }}>Leave group</Text>
                 </TouchableOpacity>
+            </View>
+        </Modal>
+    )
+}
+
+const LeaveGroupModal = ({ modalVisible, setModalVisible, chatId, navigation, userRole }) => {
+    return (
+        <Modal
+            transparent={true}
+            onRequestClose={() => {
+                setModalVisible(false)
+            }}
+            visible={modalVisible}
+            animationType='slide'
+        >
+            <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                    <Text style={styles.modalTitle}>Would you like to leave this group?</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 200 }}>
+                        <TouchableOpacity
+                            style={{ padding: 8 }}
+                            onPress={() => setModalVisible(false)}
+                        >
+                            <Text style={{ fontSize: 16, color: 'red' }}>No</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ padding: 8 }}
+                            onPress={() => {
+                                navigation.goBack()
+                                removeUserFromGroupChat(chatId, auth.currentUser.uid, userRole)
+                            }}
+                        >
+                            <Text style={{ fontSize: 16, color: 'green' }}>Yes</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
         </Modal>
     )
@@ -170,6 +210,7 @@ const ChatScreen = ({ route, navigation }) => {
     const [deletdedMessage, setDeletdedMessage] = useState('')
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
     const [chatOptionsModalVisbible, setChatOptionsModalVisbible] = useState(false)
+    const [leaveGroupModalVisble, setLeaveGroupModalVisble] = useState(false)
     const [sentAt, setSentAt] = useState('')
     const [currentUserRole, setCurrentUserRole] = useState(null)
     const flatListRef = useRef()
@@ -207,22 +248,29 @@ const ChatScreen = ({ route, navigation }) => {
         } else if (chatType === 'group') {
             getChatById(metadata.chat.id)
                 .then(async e => {
-                    await Promise.all(e.between.map(async user => {
-                        if (user.id === auth.currentUser.uid) {
-                            setCurrentUserRole(user.role)
-                        }
-                        return await getUserById(user.id)
-                    }))
+                    await Promise.all(e.allParticipants.map(async user => await getUserById(user)))
                         .then(users => {
                             users.forEach(user => usersMap.set(user.id, user))
                         })
+                    for (let i = 0; i < e.between.length; i++) {
+                        if (e.between[i].id === auth.currentUser.uid) {
+                            setCurrentUserRole(e.between[i].role)
+                            break
+                        }
+                    }
                     setMessages(e.messages)
                 })
 
             const unsub = onSnapshot(doc(db, "chats", metadata.chat.id), async (doc) => {
-                await Promise.all(doc.data().between.map(async user => await getUserById(user.id)))
+                await Promise.all(doc.data().allParticipants.map(async user => await getUserById(user)))
                     .then(users => {
                         users.forEach(user => usersMap.set(user.id, user))
+                        for (let i = 0; i < doc.data().between.length; i++) {
+                            if (doc.data().between[i].id === auth.currentUser.uid) {
+                                setCurrentUserRole(doc.data().between[i].role)
+                                break
+                            }
+                        }
                     })
                 setMessages(doc.data().messages)
             });
@@ -284,6 +332,14 @@ const ChatScreen = ({ route, navigation }) => {
                 userRole={currentUserRole}
                 chatId={metadata.chat.id}
                 between={metadata.chat.between}
+                setLeaveGroupModalVisble={setLeaveGroupModalVisble}
+            />
+            <LeaveGroupModal
+                chatId={metadata.chat.id}
+                modalVisible={leaveGroupModalVisble}
+                setModalVisible={setLeaveGroupModalVisble}
+                navigation={navigation}
+                userRole={currentUserRole}
             />
             <FlatList
                 data={messages}
@@ -381,5 +437,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         shadowColor: "#000",
         elevation: 5
+    },
+    modalTitle: {
+        paddingBottom: 8,
+        fontWeight: 'bold',
+        fontSize: 16
     }
 })

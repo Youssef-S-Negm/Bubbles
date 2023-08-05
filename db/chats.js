@@ -1,4 +1,4 @@
-import { arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
@@ -52,6 +52,7 @@ async function deleteMessage(chatId, sentAt, message) {
         ToastAndroid.show('Message deleted!', ToastAndroid.SHORT)
     } catch (err) {
         console.log("Couldn't delete message:", err);
+        ToastAndroid.show("Couldn't delete message. Try again later.", ToastAndroid.LONG)
     }
 }
 
@@ -69,4 +70,114 @@ function chatsSubscribeListener(callback) {
     return unsubscribe;
 }
 
-export { getChatById, sendMessage, deleteMessage, decryptMessage, chatsSubscribeListener }
+async function createGroupChat(groupName) {
+    try {
+        const docSnap = await addDoc(collection(db, 'chats'), {
+            groupName: groupName,
+            chatType: 'group',
+            between: [{
+                id: auth.currentUser.uid,
+                role: 'admin'
+            }],
+            allParticipants: [auth.currentUser.uid],
+            messages: [],
+            photoURL: null,
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+            chats: arrayUnion(docSnap.id)
+        })
+
+        ToastAndroid.show(`${groupName} group created successfully!`, ToastAndroid.LONG)
+    } catch (err) {
+        console.log("Couldn't create group:", err);
+        ToastAndroid.show("Couldn't create group. Try agian later!", ToastAndroid.LONG)
+    }
+}
+
+async function addUserToGroupChat(chatId, userId) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const userRef = doc(db, 'users', userId)
+
+        await updateDoc(chatRef, {
+            between: arrayUnion({
+                id: userId,
+                role: 'user'
+            }),
+            allParticipants: arrayUnion(userId),
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(userRef, {
+            chats: arrayUnion(chatId)
+        })
+        
+        ToastAndroid.show('User added to group', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error adding user to group:', err);
+        ToastAndroid.show("Couldn't add user to group. Try again later.", ToastAndroid.LONG)
+    }
+}
+
+async function removeUserFromGroupChat(chatId, userId, userRole) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const userRef = doc(db, 'users', userId)
+
+        await updateDoc(chatRef, {
+            between: arrayRemove({
+                id: userId,
+                role: userRole
+            }),
+            updatedAt: serverTimestamp()
+        })
+
+        await updateDoc(userRef, {
+            chats: arrayRemove(chatId)
+        })
+
+        ToastAndroid.show('User removed from group.', ToastAndroid.SHORT)
+    } catch (err) {
+        console.log('Error removing user from group:', err);
+        ToastAndroid.show("Couldn't remove user from group. Try again later", ToastAndroid.LONG)
+    }
+}
+
+async function setUserAsGroupAdmin(chatId, userId) {
+    try {
+        const chatRef = doc(db, 'chats', chatId)
+        const chat = await getChatById(chatId)
+        const between = chat.between
+
+        for (let i = 0; i < between.length; i++) {
+            if (between[i].id === userId) {
+                between[i].role = 'admin'
+                break
+            }
+        }
+
+        await updateDoc(chatRef, {
+            between: between,
+            updatedAt: serverTimestamp()
+        })
+
+        ToastAndroid.show("New admin added", ToastAndroid.SHORT)
+    } catch (err) {
+        console.log(err)
+        ToastAndroid.show("Couldn't add admin. Try again later", ToastAndroid.LONG)
+    }
+}
+
+export {
+    getChatById,
+    sendMessage,
+    deleteMessage,
+    decryptMessage,
+    chatsSubscribeListener,
+    createGroupChat,
+    addUserToGroupChat,
+    removeUserFromGroupChat,
+    setUserAsGroupAdmin
+}

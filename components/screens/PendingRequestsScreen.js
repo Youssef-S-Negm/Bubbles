@@ -1,9 +1,11 @@
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { connectUsers, refuseConnection } from '../../db/users'
+import { connectUsers, getUserById, refuseConnection } from '../../db/users'
 import { Image } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
+import { useState } from 'react'
+import { auth } from '../../db/config'
 
 const NoPendingRequests = () => {
   return (
@@ -26,7 +28,20 @@ const NoPendingRequests = () => {
   )
 }
 
-const PendingRequestsScreen = ({ pendingUsers }) => {
+const PendingRequestsScreen = ({ pendingUsers, setPendingUsers }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    getUserById(auth.currentUser.uid)
+      .then(async currentUser => {
+        await Promise.all(currentUser.pendingRequests.map(getUserById))
+          .then(users => {
+            setPendingUsers(users)
+          })
+      })
+    setIsRefreshing(false)
+  }
 
   const UserItem = ({ item }) => {
     return (
@@ -67,6 +82,8 @@ const PendingRequestsScreen = ({ pendingUsers }) => {
           renderItem={({ item }) => <UserItem item={item} />}
           keyExtractor={item => item.id}
           ItemSeparatorComponent={<View style={{ height: 8 }} />}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
         />}
     </View>
   )

@@ -1,8 +1,10 @@
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { cancelRequest } from '../../db/users'
+import { cancelRequest, getUserById } from '../../db/users'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { MaterialIcons } from '@expo/vector-icons'
+import { auth } from '../../db/config'
+import { useState } from 'react'
 
 const NoSentRequests = () => {
   return (
@@ -25,7 +27,20 @@ const NoSentRequests = () => {
   )
 }
 
-const SentRequestsScreen = ({ sentRequests }) => {
+const SentRequestsScreen = ({ sentRequests, setSentRequests }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    getUserById(auth.currentUser.uid)
+      .then(async currentUser => {
+        await Promise.all(currentUser.sentRequests.map(getUserById))
+          .then(users => {
+            setSentRequests(users)
+          })
+      })
+    setIsRefreshing(false)
+  }
 
   const UserItem = ({ item }) => {
     return (
@@ -57,6 +72,8 @@ const SentRequestsScreen = ({ sentRequests }) => {
           renderItem={({ item }) => <UserItem item={item} />}
           keyExtractor={item => item.id}
           ItemSeparatorComponent={<View style={{ height: 8 }} />}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
         />}
     </View>
   )

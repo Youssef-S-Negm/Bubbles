@@ -21,6 +21,7 @@ const ConnectionsStack = () => {
                 await Promise.all(currentUser.sentRequests.map(getUserById)),
                 await Promise.all(currentUser.connections.map(getUserById))
             ]).then(([pending, sent, connections]) => {
+                connections.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
                 setPendingUsers(pending)
                 setSentRequestsToUsers(sent)
                 setYourConnections(connections)
@@ -35,6 +36,7 @@ const ConnectionsStack = () => {
                         await Promise.all(currentUser.sentRequests.map(getUserById)),
                         await Promise.all(currentUser.connections.map(getUserById))
                     ]).then(([pending, sent, connections]) => {
+                        connections.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
                         setPendingUsers(pending)
                         setSentRequestsToUsers(sent)
                         setYourConnections(connections)
@@ -80,13 +82,13 @@ const ConnectionsStack = () => {
             })}
         >
             <Tab.Screen name="Pending requests">
-                {props => <PendingRequestsScreen {...props} pendingUsers={pendingUsers} />}
+                {props => <PendingRequestsScreen {...props} pendingUsers={pendingUsers} setPendingUsers={setPendingUsers} />}
             </Tab.Screen>
             <Tab.Screen name="Sent requests">
-                {props => <SentRequestsScreen {...props} sentRequests={sentRequestsToUsers} />}
+                {props => <SentRequestsScreen {...props} sentRequests={sentRequestsToUsers} setSentRequests={setSentRequestsToUsers} />}
             </Tab.Screen>
             <Tab.Screen name="Your connections">
-                {props => <YourConnectionsScreen {...props} yourConnections={yourConnections} />}
+                {props => <YourConnectionsScreen {...props} yourConnections={yourConnections} setYourConnections={setYourConnections} />}
             </Tab.Screen>
         </Tab.Navigator>
     )

@@ -5,6 +5,8 @@ import RejectRemoveUserButton from '../buttons/RejectRemoveUserButton'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { LinearGradient } from 'expo-linear-gradient'
 import { AntDesign } from '@expo/vector-icons'
+import { getUserById } from '../../db/users'
+import { auth } from '../../db/config'
 
 const NoConnections = () => {
     return (
@@ -27,9 +29,23 @@ const NoConnections = () => {
     )
 }
 
-const YourConnectionsScreen = ({ yourConnections }) => {
+const YourConnectionsScreen = ({ yourConnections, setYourConnections }) => {
     const [userToBeRemoved, setUserToBeRemoved] = useState(null)
     const [modalVisible, setModalVisible] = useState(false)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    const handleRefresh = () => {
+        setIsRefreshing(true)
+        getUserById(auth.currentUser.uid)
+            .then(async currentUser => {
+                await Promise.all(currentUser.connections.map(getUserById))
+                    .then(users => {
+                        users.sort((a, b) => a.displayName.toUpperCase() < b.displayName.toUpperCase() ? -1 : a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : 0)
+                        setYourConnections(users)
+                    })
+            })
+        setIsRefreshing(false)
+    }
 
     const UserItem = ({ item }) => {
         return (
@@ -101,6 +117,8 @@ const YourConnectionsScreen = ({ yourConnections }) => {
                     renderItem={({ item }) => <UserItem item={item} />}
                     keyExtractor={item => item.id}
                     ItemSeparatorComponent={<View style={{ height: 8 }} />}
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
                 />
             }
         </View>

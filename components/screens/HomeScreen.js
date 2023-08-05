@@ -94,6 +94,21 @@ const ChatItem = ({ item, navigation }) => {
 
 const HomeScreen = ({ navigation }) => {
     const [chats, setChats] = useState([])
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    const handleRefresh = () => {
+        setIsRefreshing(true)
+        getUserById(auth.currentUser.uid)
+            .then(user => {
+                Promise.all(user.chats.map(getChatById))
+                    .then(e => {
+                        e.sort((a, b) => a.updatedAt.seconds - b.updatedAt.seconds)
+                        e.reverse()
+                        setChats(e)
+                    })
+            })
+        setIsRefreshing(false)
+    }
 
     useEffect(() => {
         getUserById(auth.currentUser.uid)
@@ -135,6 +150,8 @@ const HomeScreen = ({ navigation }) => {
                     renderItem={({ item }) => <ChatItem item={item} navigation={navigation} />}
                     ItemSeparatorComponent={<View style={{ height: 8 }} />}
                     keyExtractor={item => item.id}
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
                 />}
             <NavigateToCreateGroupChatButton navigation={navigation} />
         </View>

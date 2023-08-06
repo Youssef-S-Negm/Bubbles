@@ -1,4 +1,4 @@
-import { Image, Modal, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import SignOutButton from '../buttons/SignOutButton'
 import ShowQrCodeButton from '../buttons/ShowQrCodeButton'
@@ -8,7 +8,9 @@ import QRCode from 'react-native-qrcode-svg'
 import HideQrCodeButton from '../buttons/HideQrCodeButton'
 import DoneEditProfileButton from '../buttons/DoneEditProfileButton'
 import CancelEditProfileButton from '../buttons/CancelEditProfileButton'
-import { getUserById,  userSubscribeListener } from '../../db/users'
+import { getUserById, updateProfilePicture, userSubscribeListener } from '../../db/users'
+import EditProfilePictureButton from '../buttons/EditProfilePictureButton'
+import * as ImagePicker from 'expo-image-picker'
 
 const QrModal = ({ modalVisible, setModalVisible, user }) => {
     return (
@@ -91,9 +93,81 @@ const EditProfileModal = ({ modalVisible, setModalVisible, user }) => {
     )
 }
 
+const ConfirmProfilePictureUploadModal = ({ image, setImage, modalVisible, setModalVisible, isUploading, setIsUploading }) => {
+    if (image) {
+        return (
+            <Modal
+                transparent={true}
+                animationType='slide'
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(false)
+                    setImage(null)
+                }}
+            >
+                {isUploading ?
+                    <View style={styles.centeredView}>
+                        <View style={styles.modalView}>
+                            <ActivityIndicator size={150} />
+                        </View>
+                    </View>
+                    :
+                    <View style={styles.centeredView}>
+                        <View style={styles.modalView}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Set this photo as your profile picture?</Text>
+                            <Image source={{ uri: image }} style={{ height: 150, width: 150, borderRadius: 150, marginBottom: 8 }} />
+                            <View style={{ flexDirection: 'row', width: 200, justifyContent: 'space-between' }}>
+                                <TouchableOpacity
+                                    style={{ padding: 8 }}
+                                    onPress={() => {
+                                        setImage(null)
+                                        setModalVisible(false)
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 16, color: 'red' }}>No</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={{ padding: 8 }}
+                                    onPress={async () => {
+                                        setIsUploading(true)
+                                        await updateProfilePicture(image)
+                                        setIsUploading(false)
+                                        setImage(null)
+                                        setModalVisible(false)
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 16, color: 'green' }}>Yes</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                }
+
+            </Modal>
+        )
+    }
+}
+
 const ProfileScreen = ({ user, setUser }) => {
     const [qrModalVisible, setQrModalVisible] = useState(false);
     const [editProfileModalVisible, setEditProfileModalVisible] = useState(false)
+    const [confirmProfilePictureUploadModalVisible, setConfirmProfilePictureUploadModalVisible] = useState(false)
+    const [chosenProfileImage, setChosenProfileImage] = useState(null)
+    const [isUploading, setIsUploading] = useState(false)
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1
+        })
+
+        if (!result.canceled) {
+            setChosenProfileImage(result.assets[0].uri)
+            setConfirmProfilePictureUploadModalVisible(true)
+        }
+    }
 
     useEffect(() => {
         const unsubscribe = userSubscribeListener(user.id, ({ change }) => {
@@ -110,14 +184,33 @@ const ProfileScreen = ({ user, setUser }) => {
 
     return (
         <View style={styles.container}>
-            <QrModal modalVisible={qrModalVisible} setModalVisible={setQrModalVisible} user={user} />
-            <EditProfileModal modalVisible={editProfileModalVisible} setModalVisible={setEditProfileModalVisible} user={user} />
+            <QrModal
+                modalVisible={qrModalVisible}
+                setModalVisible={setQrModalVisible}
+                user={user}
+            />
+            <EditProfileModal
+                modalVisible={editProfileModalVisible}
+                setModalVisible={setEditProfileModalVisible}
+                user={user}
+            />
+            <ConfirmProfilePictureUploadModal
+                image={chosenProfileImage}
+                setImage={setChosenProfileImage}
+                modalVisible={confirmProfilePictureUploadModalVisible}
+                setModalVisible={setConfirmProfilePictureUploadModalVisible}
+                setIsUploading={setIsUploading}
+                isUploading={isUploading}
+            />
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image
-                    source={user.photoURL ? { uri: user.photoURL } : require('../../assets/avatar.png')}
-                    style={{ width: 150, height: 150, borderRadius: 150 }}
-                    resizeMode='contain'
-                />
+                <View>
+                    <Image
+                        source={user.photoURL ? { uri: user.photoURL } : require('../../assets/avatar.png')}
+                        style={{ width: 150, height: 150, borderRadius: 150 }}
+                        resizeMode='contain'
+                    />
+                    <EditProfilePictureButton onPress={pickImage} />
+                </View>
                 <Text style={styles.userName}>{user.displayName}</Text>
             </View>
             <View style={{ height: 8 }} />

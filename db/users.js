@@ -12,10 +12,11 @@ import {
     updateDoc,
     where
 } from "firebase/firestore";
-import { auth, db } from "./config";
+import { auth, db, storage } from "./config";
 import { updateProfile } from "firebase/auth";
 import { ToastAndroid } from "react-native";
 import { getChatById } from "./chats";
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 
 async function addUserToDb(user) {
     try {
@@ -217,6 +218,43 @@ async function disconnectUsers(userToRemoveId) {
     })
 }
 
+async function updateProfilePicture(fileUri) {
+    try {
+        const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}.png`)
+        const userDocRef = doc(db, 'users', auth.currentUser.uid)
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            xhr.onload = function () {
+                resolve(xhr.response)
+            }
+            xhr.onerror = function (e) {
+                console.log(e);
+                reject(new TypeError("Network request failed"))
+            }
+            xhr.responseType = 'blob'
+            xhr.open('GET', fileUri, true)
+            xhr.send(null)
+        })
+
+        await uploadBytes(storageRef, blob, { contentType: 'image/png' })
+        blob.close()
+
+        const url = await getDownloadURL(storageRef)
+        
+        await updateProfile(auth.currentUser, {
+            photoURL: url
+        })
+        await updateDoc(userDocRef, {
+            photoURL: url
+        })
+
+        ToastAndroid.show('Profile image updated', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error changing profile image:', err);
+        ToastAndroid.show("Couldn't change profile picture. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     addUserToDb,
     getUserById,
@@ -226,5 +264,6 @@ export {
     connectUsers,
     refuseConnection,
     cancelRequest,
-    disconnectUsers
+    disconnectUsers,
+    updateProfilePicture
 }

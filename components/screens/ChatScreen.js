@@ -98,7 +98,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
     )
 }
 
-const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chatId, between, setLeaveGroupModalVisble }) => {
+const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chat, setLeaveGroupModalVisble }) => {
     return (
         <Modal
             visible={modalVisible}
@@ -129,8 +129,8 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                         <TouchableOpacity
                             onPress={() => {
                                 navigation.navigate('Add user', {
-                                    chatId: chatId,
-                                    between: between
+                                    chatId: chat.id,
+                                    between: chat.between
                                 })
                                 setModalVisible(false)
                             }}
@@ -144,9 +144,8 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                 <TouchableOpacity
                     onPress={() => {
                         navigation.navigate('Group info', {
-                            between: between,
+                            chat: chat,
                             userRole: userRole,
-                            chatId: chatId
                         })
                         setModalVisible(false)
                     }}
@@ -214,6 +213,7 @@ const ChatScreen = ({ route, navigation }) => {
     const [sentAt, setSentAt] = useState('')
     const [currentUserRole, setCurrentUserRole] = useState(null)
     const flatListRef = useRef()
+    const [currentChat, setCurrentChat] = useState(metadata.chat)
 
     const scrollToBottom = () => {
         flatListRef.current.scrollToEnd({ animated: true });
@@ -330,8 +330,7 @@ const ChatScreen = ({ route, navigation }) => {
                 setModalVisible={setChatOptionsModalVisbible}
                 navigation={navigation}
                 userRole={currentUserRole}
-                chatId={metadata.chat.id}
-                between={metadata.chat.between}
+                chat={metadata.chat}
                 setLeaveGroupModalVisble={setLeaveGroupModalVisble}
             />
             <LeaveGroupModal

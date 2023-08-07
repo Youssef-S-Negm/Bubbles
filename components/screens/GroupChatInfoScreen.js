@@ -135,6 +135,9 @@ const EditGroupInfoModal = ({ modalVisible, setModalVisible, chatId, groupName, 
           <View style={{ flexDirection: 'row', width: 200, justifyContent: 'space-between', marginTop: 8 }}>
             <TouchableOpacity
               style={{ padding: 8 }}
+              onPress={() => {
+                setModalVisible(false)
+              }}
             >
               <Text style={{ fontSize: 16, color: 'grey' }}>Cancel</Text>
             </TouchableOpacity>

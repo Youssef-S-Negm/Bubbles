@@ -1,7 +1,8 @@
 import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
-import { auth, db } from "./config";
+import { auth, db, storage } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 async function getChatById(id) {
     try {
@@ -113,7 +114,7 @@ async function addUserToGroupChat(chatId, userId) {
         await updateDoc(userRef, {
             chats: arrayUnion(chatId)
         })
-        
+
         ToastAndroid.show('User added to group', ToastAndroid.LONG)
     } catch (err) {
         console.log('Error adding user to group:', err);
@@ -170,6 +171,57 @@ async function setUserAsGroupAdmin(chatId, userId) {
     }
 }
 
+async function changeGroupName(groupName, chatId) {
+    try {
+        const chatDocRef = doc(db, 'chats', chatId)
+
+        await updateDoc(chatDocRef, {
+            groupName: groupName,
+            updatedAt: serverTimestamp()
+        })
+
+        ToastAndroid.show('Group name updated!', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error changing group name:', err);
+        ToastAndroid.show("Couldn't change group name. Try again later.", ToastAndroid.LONG)
+    }
+}
+
+async function changeGroupPhoto(imageUri, chatId) {
+    try {
+        const storageRef = ref(storage, `/chats/group_chat_pictures/${chatId}.png`)
+        const chatDocRef = doc(db, 'chats', chatId)
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            xhr.onload = function () {
+                resolve(xhr.response)
+            }
+            xhr.onerror = function (e) {
+                console.log(e);
+                reject(new TypeError("Network request failed"))
+            }
+            xhr.responseType = 'blob'
+            xhr.open('GET', imageUri, true)
+            xhr.send(null)
+        })
+
+        await uploadBytes(storageRef, blob, { contentType: 'image/png' })
+        blob.close()
+
+        const url = await getDownloadURL(storageRef)
+
+        await updateDoc(chatDocRef, {
+            photoURL: url,
+            updatedAt: serverTimestamp()
+        })
+
+        ToastAndroid.show('Group chat photo updated!', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error updating group chat photo:', err);
+        ToastAndroid.show("Couldn't change group chat photo. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -179,5 +231,7 @@ export {
     createGroupChat,
     addUserToGroupChat,
     removeUserFromGroupChat,
-    setUserAsGroupAdmin
+    setUserAsGroupAdmin,
+    changeGroupName,
+    changeGroupPhoto
 }

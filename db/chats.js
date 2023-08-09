@@ -22,7 +22,13 @@ async function sendMessage(chatId, message) {
     try {
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
-        let cipherText = CryptoJS.AES.encrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+        let cipherText
+
+        if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
+            throw new Error('Encryption key is not found')
+        } else {
+            cipherText = CryptoJS.AES.encrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+        }
 
         await updateDoc(docRef, {
             messages: arrayUnion({
@@ -58,8 +64,14 @@ async function deleteMessage(chatId, sentAt, message) {
 }
 
 function decryptMessage(message) {
-    let bytes = CryptoJS.AES.decrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY)
-    return bytes.toString(CryptoJS.enc.Utf8)
+    let bytes
+    
+    if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
+        throw new Error("Decryption key is not found")
+    } else {
+        bytes = CryptoJS.AES.decrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY)
+        return bytes.toString(CryptoJS.enc.Utf8)
+    }
 }
 
 function chatsSubscribeListener(callback) {

@@ -1,13 +1,14 @@
-import { FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { decryptMessage, getChatById, removeUserFromGroupChat, sendMessage } from '../../db/chats'
-import { Ionicons, AntDesign, SimpleLineIcons } from '@expo/vector-icons';
+import { Ionicons, AntDesign, SimpleLineIcons, Entypo } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
 import { auth, db } from '../../db/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
 import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
+import * as Picker from 'expo-image-picker'
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     const [message, setMessage] = useState(null)
@@ -15,7 +16,12 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
 
     const handleDecryption = () => {
         try {
-            setMessage(decryptMessage(item.message))
+            setMessage({
+                attachments: item.attachments,
+                message: item.message ? decryptMessage(item.message) : null,
+                sender: item.sender,
+                sentAt: item.sentAt
+            })
         } catch (err) {
             console.log(err)
             setError(err)
@@ -26,32 +32,83 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
         handleDecryption()
     }, [])
 
-    if (sender.id === auth.currentUser.uid) {
-        const date = new Date(item.sentAt)
-        const formattedDate = date.getHours() + ':' + date.getMinutes()
+    if (message) {
+        if (sender.id === auth.currentUser.uid) {
+            const date = new Date(item.sentAt)
+            const formattedDate = date.getHours() + ':' + date.getMinutes()
 
-        return (
-            <TouchableOpacity
-                onLongPress={() => {
-                    setSentAt(item.sentAt)
-                    setDeletdedMessage(item.message)
-                    setModalVisible(true)
-                }}
-                style={{ alignSelf: 'flex-end' }}
-            >
-                <LinearGradient
-                    colors={['#00736e', '#6a00c9']}
-                    start={{ x: 1, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={{
-                        padding: 8,
-                        borderTopLeftRadius: 16,
-                        borderTopRightRadius: 16,
-                        borderBottomLeftRadius: 16,
-                        marginLeft: 70
+            return (
+                <TouchableOpacity
+                    onLongPress={() => {
+                        setSentAt(item.sentAt)
+                        setDeletdedMessage(item.message)
+                        setModalVisible(true)
                     }}
+                    style={{ alignSelf: 'flex-end', marginLeft: 70 }}
                 >
-                    <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
+                    <LinearGradient
+                        colors={['#00736e', '#6a00c9']}
+                        start={{ x: 1, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={{
+                            padding: 8,
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            borderBottomLeftRadius: 16,
+                        }}
+                    >
+                        <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
+                        {error ?
+                            <View style={{
+                                flexDirection: 'row', alignItems: 'center', marginBottom: 8
+                            }}>
+                                <AntDesign name='warning' size={16} color={'red'} />
+                                <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
+                            </View>
+                            :
+                            <View>
+                                {message.attachments.length > 0 ?
+                                    <View>
+                                        {
+                                            message.attachments.map((attachment, index) => {
+                                                return (
+                                                    <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
+                                                        <Image
+                                                            source={{ uri: attachment.url }}
+                                                            style={{ width: 200, height: 200, borderRadius: 16 }}
+                                                        />
+                                                    </View>
+                                                )
+                                            })
+                                        }
+                                    </View>
+                                    :
+                                    null}
+                                {message.message ?
+                                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{message.message}</Text>
+                                    :
+                                    null}
+                            </View>
+                        }
+                        <Text style={{ color: 'white', fontSize: 10 }}>{formattedDate}</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            )
+        } else {
+            const date = new Date(item.sentAt)
+            const formattedDate = date.getHours() + ':' + date.getMinutes()
+
+            return (
+                <View style={{
+                    alignSelf: 'flex-start',
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    borderBottomRightRadius: 16,
+                    backgroundColor: '#e4e4e4',
+                    padding: 8,
+                    marginRight: 70
+                }}>
+                    <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
                     {error ?
                         <View style={{
                             flexDirection: 'row', alignItems: 'center', marginBottom: 8
@@ -60,38 +117,33 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                             <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
                         </View>
                         :
-                        <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
-                    <Text style={{ color: 'white', fontSize: 10 }}>{formattedDate}</Text>
-                </LinearGradient>
-            </TouchableOpacity>
-        )
-    } else {
-        const date = new Date(item.sentAt)
-        const formattedDate = date.getHours() + ':' + date.getMinutes()
-
-        return (
-            <View style={{
-                alignSelf: 'flex-start',
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
-                borderBottomRightRadius: 16,
-                backgroundColor: '#e4e4e4',
-                padding: 8,
-                marginRight: 70
-            }}>
-                <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
-                {error ?
-                    <View style={{
-                        flexDirection: 'row', alignItems: 'center', marginBottom: 8
-                    }}>
-                        <AntDesign name='warning' size={16} color={'red'} />
-                        <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
-                    </View>
-                    :
-                    <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
-                <Text style={{ color: 'black', fontSize: 10 }}>{formattedDate}</Text>
-            </View>
-        )
+                        <View>
+                            {message.attachments.length > 0 ?
+                                <View>
+                                    {
+                                        message.attachments.map((attachment, index) => {
+                                            return (
+                                                <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
+                                                    <Image
+                                                        source={{ uri: attachment.url }}
+                                                        style={{ width: 200, height: 200, borderRadius: 16 }}
+                                                    />
+                                                </View>
+                                            )
+                                        })
+                                    }
+                                </View>
+                                :
+                                null}
+                            {message.message ?
+                                <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{message.message}</Text>
+                                :
+                                null}
+                        </View>}
+                    <Text style={{ color: 'black', fontSize: 10 }}>{formattedDate}</Text>
+                </View>
+            )
+        }
     }
 }
 
@@ -233,10 +285,46 @@ const LeaveGroupModal = ({ modalVisible, setModalVisible, chatId, navigation, us
     )
 }
 
+const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
+    if (item.type === 'image') {
+        return (
+            <View>
+                <Image
+                    source={{ uri: item.uri }}
+                    style={{ width: 80, height: 80, borderRadius: 6 }}
+                />
+                {isUploading ? <ActivityIndicator size={80} style={{ position: 'absolute', alignSelf: 'center' }} /> : null}
+                <TouchableOpacity
+                    style={{
+                        position: 'absolute',
+                        alignSelf: 'flex-end',
+                        borderWidth: 2,
+                        borderColor: 'white',
+                        borderRadius: 20,
+                        right: 4,
+                        top: 4
+                    }}
+                    onPress={() => {
+                        setMessage({
+                            text: message.text,
+                            files: message.files.filter(e => e !== item)
+                        })
+                    }}
+                >
+                    <Entypo name='cross' size={20} color={'white'} />
+                </TouchableOpacity>
+            </View>
+        )
+    }
+}
+
 const ChatScreen = ({ route, navigation }) => {
     const { chatType, metadata } = route.params
     const [messages, setMessages] = useState([])
-    const [message, setMessage] = useState('')
+    const [message, setMessage] = useState({
+        text: '',
+        files: []
+    })
     const [usersMap, setUsersMap] = useState(new Map())
     const [deletdedMessage, setDeletdedMessage] = useState('')
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -244,8 +332,30 @@ const ChatScreen = ({ route, navigation }) => {
     const [leaveGroupModalVisble, setLeaveGroupModalVisble] = useState(false)
     const [sentAt, setSentAt] = useState('')
     const [currentUserRole, setCurrentUserRole] = useState(null)
+    const [isUploading, setIsUploading] = useState(false)
     const flatListRef = useRef()
-    const [currentChat, setCurrentChat] = useState(metadata.chat)
+    // const [currentChat, setCurrentChat] = useState(metadata.chat)
+
+    const pickFile = async () => {
+        const result = await Picker.launchImageLibraryAsync({
+            mediaTypes: Picker.MediaTypeOptions.All,
+            quality: 1,
+            videoQuality: 0.7
+        })
+
+        if (!result.canceled) {
+            setMessage({
+                text: message.text,
+                files: [
+                    ...message.files,
+                    {
+                        uri: result.assets[0].uri,
+                        type: result.assets[0].type
+                    }
+                ]
+            })
+        }
+    }
 
     const scrollToBottom = () => {
         flatListRef.current.scrollToEnd({ animated: true });
@@ -394,20 +504,43 @@ const ChatScreen = ({ route, navigation }) => {
                     }
                 }}
             />
+            {message.files.length > 0 ?
+                <View>
+                    <FlatList
+                        data={message.files}
+                        horizontal={true}
+                        renderItem={({ item }) => <AttachmentsItem item={item} message={message} setMessage={setMessage} isUploading={isUploading} />}
+                        ItemSeparatorComponent={<View style={{ width: 8 }} />}
+                        style={{ marginTop: 8 }}
+                    />
+                </View>
+                :
+                null}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={styles.inputView}>
                     <TextInput
                         placeholder='Type your message here'
-                        value={message}
-                        onChangeText={e => setMessage(e)}
+                        value={message.text}
+                        onChangeText={e => setMessage({ text: e, files: [...message.files] })}
                         multiline={true}
                         style={styles.messageTextInput}
                     />
                     <TouchableOpacity
-                        onPress={() => {
-                            if (message.length > 0) {
-                                sendMessage(metadata.chat.id, message)
-                                setMessage('')
+                        style={{ marginRight: 8 }}
+                        onPress={pickFile}
+                    >
+                        <Ionicons name='attach' size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={async () => {
+                            if (message.text.length > 0 || message.files.length > 0) {
+                                setIsUploading(true)
+                                await sendMessage(metadata.chat.id, message)
+                                setMessage({
+                                    text: '',
+                                    files: []
+                                })
+                                setIsUploading(false)
                             }
                         }}
                     >

@@ -23,18 +23,51 @@ async function sendMessage(chatId, message) {
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
         let cipherText
+        const urls = []
 
-        if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
-            throw new Error('Encryption key is not found')
-        } else {
-            cipherText = CryptoJS.AES.encrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+        if (message.text.length > 0) {
+            if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
+                throw new Error('Encryption key is not found')
+            } else {
+                cipherText = CryptoJS.AES.encrypt(message.text, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+            }
+        }
+
+        for (let i = 0; i < message.files.length; i++) {
+            const date = new Date()
+            const formattedDate = "" + date.getDay() + date.getMonth() + date.getFullYear() + date.getHours() + date.getMinutes() + date.getSeconds()
+            const storageRef = message.files[i].type === 'image' ?
+                ref(storage, `chats/${chatId}/images/${formattedDate}.png`)
+                :
+                null
+            const contentType = message.files[i].type === 'image' ? 'image/png' : null
+
+            const blob = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest()
+                xhr.onload = function () {
+                    resolve(xhr.response)
+                }
+                xhr.onerror = function (e) {
+                    console.log(e);
+                    reject(new TypeError("Network request failed"))
+                }
+                xhr.responseType = 'blob'
+                xhr.open('GET', message.files[i].uri, true)
+                xhr.send(null)
+            })
+
+            await uploadBytes(storageRef, blob, { contentType: contentType })
+            blob.close()
+
+            urls.push({ url: await getDownloadURL(storageRef), type: message.files[i].type })
         }
 
         await updateDoc(docRef, {
             messages: arrayUnion({
-                message: cipherText,
+                message: cipherText ? cipherText : null,
                 sender: auth.currentUser.uid,
-                sentAt: date.toISOString()
+                sentAt: date.toISOString(),
+                attachments: urls
             }),
             updatedAt: serverTimestamp()
         })
@@ -65,7 +98,7 @@ async function deleteMessage(chatId, sentAt, message) {
 
 function decryptMessage(message) {
     let bytes
-    
+
     if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
         throw new Error("Decryption key is not found")
     } else {

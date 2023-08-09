@@ -10,6 +10,22 @@ import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
 import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
+    const [message, setMessage] = useState(null)
+    const [error, setError] = useState(null)
+
+    const handleDecryption = () => {
+        try {
+            setMessage(decryptMessage(item.message))
+        } catch (err) {
+            console.log(err)
+            setError(err)
+        }
+    }
+
+    useEffect(() => {
+        handleDecryption()
+    }, [])
+
     if (sender.id === auth.currentUser.uid) {
         const date = new Date(item.sentAt)
         const formattedDate = date.getHours() + ':' + date.getMinutes()
@@ -36,7 +52,15 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                     }}
                 >
                     <Text style={{ color: 'white', fontWeight: 'bold', paddingBottom: 8 }}>You</Text>
-                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
+                    {error ?
+                        <View style={{
+                            flexDirection: 'row', alignItems: 'center', marginBottom: 8
+                        }}>
+                            <AntDesign name='warning' size={16} color={'red'} />
+                            <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
+                        </View>
+                        :
+                        <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
                     <Text style={{ color: 'white', fontSize: 10 }}>{formattedDate}</Text>
                 </LinearGradient>
             </TouchableOpacity>
@@ -56,7 +80,15 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 marginRight: 70
             }}>
                 <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 8 }}>{sender.displayName}</Text>
-                <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{decryptMessage(item.message)}</Text>
+                {error ?
+                    <View style={{
+                        flexDirection: 'row', alignItems: 'center', marginBottom: 8
+                    }}>
+                        <AntDesign name='warning' size={16} color={'red'} />
+                        <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
+                    </View>
+                    :
+                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
                 <Text style={{ color: 'black', fontSize: 10 }}>{formattedDate}</Text>
             </View>
         )
@@ -78,7 +110,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     <Text style={styles.modalTitle}>Would like to delete this message?</Text>
-                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{decryptMessage(message)}</Text>
+                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{ }</Text>
                     <View style={{ flexDirection: 'row', paddingTop: 8 }}>
                         <RejectDeleteMessageButton
                             setModalVisible={setModalVisible}

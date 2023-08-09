@@ -88,7 +88,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                         <Text style={{ color: 'red', fontSize: 16, marginLeft: 4 }}>Error loading message</Text>
                     </View>
                     :
-                    <Text style={{ color: 'white', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
+                    <Text style={{ color: 'black', fontSize: 16, paddingBottom: 8 }}>{message}</Text>}
                 <Text style={{ color: 'black', fontSize: 10 }}>{formattedDate}</Text>
             </View>
         )

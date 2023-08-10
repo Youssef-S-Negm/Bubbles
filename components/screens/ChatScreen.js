@@ -9,6 +9,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
 import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
 import * as Picker from 'expo-image-picker'
+import { Video } from 'expo-av'
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     const [message, setMessage] = useState(null)
@@ -286,36 +287,49 @@ const LeaveGroupModal = ({ modalVisible, setModalVisible, chatId, navigation, us
 }
 
 const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
-    if (item.type === 'image') {
-        return (
-            <View>
+    return (
+        <View>
+            {item.type === 'image' ?
                 <Image
                     source={{ uri: item.uri }}
                     style={{ width: 80, height: 80, borderRadius: 6 }}
                 />
-                {isUploading ? <ActivityIndicator size={80} style={{ position: 'absolute', alignSelf: 'center' }} /> : null}
-                <TouchableOpacity
-                    style={{
-                        position: 'absolute',
-                        alignSelf: 'flex-end',
-                        borderWidth: 2,
-                        borderColor: 'white',
-                        borderRadius: 20,
-                        right: 4,
-                        top: 4
-                    }}
-                    onPress={() => {
-                        setMessage({
-                            text: message.text,
-                            files: message.files.filter(e => e !== item)
-                        })
-                    }}
-                >
-                    <Entypo name='cross' size={20} color={'white'} />
-                </TouchableOpacity>
-            </View>
-        )
-    }
+                :
+                item.type === 'video' ?
+                    <Video
+                        source={{ uri: item.uri }}
+                        style={{ width: 80, height: 80, borderRadius: 6, backgroundColor: 'black' }}
+                        resizeMode='contain'
+                        useNativeControls
+                        isLooping
+                        shouldPlay
+                    />
+                    :
+                    null
+            }
+
+            {isUploading ? <ActivityIndicator size={80} style={{ position: 'absolute', alignSelf: 'center' }} /> : null}
+            <TouchableOpacity
+                style={{
+                    position: 'absolute',
+                    alignSelf: 'flex-end',
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    borderRadius: 20,
+                    right: 4,
+                    top: 4
+                }}
+                onPress={() => {
+                    setMessage({
+                        text: message.text,
+                        files: message.files.filter(e => e !== item)
+                    })
+                }}
+            >
+                <Entypo name='cross' size={20} color={'white'} />
+            </TouchableOpacity>
+        </View>
+    )
 }
 
 const ChatScreen = ({ route, navigation }) => {
@@ -337,23 +351,27 @@ const ChatScreen = ({ route, navigation }) => {
     // const [currentChat, setCurrentChat] = useState(metadata.chat)
 
     const pickFile = async () => {
-        const result = await Picker.launchImageLibraryAsync({
-            mediaTypes: Picker.MediaTypeOptions.All,
-            quality: 1,
-            videoQuality: 0.7
-        })
-
-        if (!result.canceled) {
-            setMessage({
-                text: message.text,
-                files: [
-                    ...message.files,
-                    {
-                        uri: result.assets[0].uri,
-                        type: result.assets[0].type
-                    }
-                ]
+        const permission = await Picker.requestMediaLibraryPermissionsAsync()
+        
+        if (permission.status === 'granted') {
+            const result = await Picker.launchImageLibraryAsync({
+                mediaTypes: Picker.MediaTypeOptions.All,
+                quality: 1,
+                videoQuality: 0.7
             })
+
+            if (!result.canceled) {
+                setMessage({
+                    text: message.text,
+                    files: [
+                        ...message.files,
+                        {
+                            uri: result.assets[0].uri,
+                            type: result.assets[0].type
+                        }
+                    ]
+                })
+            }
         }
     }
 

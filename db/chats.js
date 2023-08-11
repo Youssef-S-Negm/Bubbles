@@ -20,6 +20,7 @@ async function getChatById(id) {
 
 async function sendMessage(chatId, message) {
     try {
+        console.log(message);
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
         let cipherText
@@ -36,11 +37,9 @@ async function sendMessage(chatId, message) {
         for (let i = 0; i < message.files.length; i++) {
             const date = new Date()
             const formattedDate = "" + date.getDay() + date.getMonth() + date.getFullYear() + date.getHours() + date.getMinutes() + date.getSeconds()
-            const storageRef = message.files[i].type === 'image' ?
-                ref(storage, `chats/${chatId}/images/${formattedDate}.png`)
-                :
-                null
-            const contentType = message.files[i].type === 'image' ? 'image/png' : null
+            const mimeType = message.files[i].mimeType
+            const fileFormat = mimeType.split('/')[1]
+            const storageRef = ref(storage, `chats/attachments/${formattedDate}.${fileFormat}`)
 
             const blob = await new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest()
@@ -56,10 +55,10 @@ async function sendMessage(chatId, message) {
                 xhr.send(null)
             })
 
-            await uploadBytes(storageRef, blob, { contentType: contentType })
+            await uploadBytes(storageRef, blob, { contentType: mimeType })
             blob.close()
 
-            urls.push({ url: await getDownloadURL(storageRef), type: message.files[i].type })
+            urls.push({ url: await getDownloadURL(storageRef), type: mimeType })
         }
 
         await updateDoc(docRef, {
@@ -73,7 +72,7 @@ async function sendMessage(chatId, message) {
         })
     } catch (err) {
         console.log('Error sending message:', err);
-        ToastAndroid.show("Couldn't send the message", ToastAndroid.SHORT)
+        ToastAndroid.show("Couldn't send the message. Try again later.", ToastAndroid.SHORT)
     }
 }
 

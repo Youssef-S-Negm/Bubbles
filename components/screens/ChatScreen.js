@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { decryptMessage, getChatById, removeUserFromGroupChat, sendMessage } from '../../db/chats'
 import { Ionicons, AntDesign, SimpleLineIcons, Entypo } from '@expo/vector-icons';
@@ -8,12 +8,13 @@ import { auth, db } from '../../db/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
 import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
-import * as Picker from 'expo-image-picker'
+import * as Picker from 'expo-document-picker'
 import { Video } from 'expo-av'
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     const [message, setMessage] = useState(null)
     const [error, setError] = useState(null)
+    const [isLoading, setIsLoading] = useState(false)
 
     const handleDecryption = () => {
         try {
@@ -74,10 +75,30 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                             message.attachments.map((attachment, index) => {
                                                 return (
                                                     <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
-                                                        <Image
-                                                            source={{ uri: attachment.url }}
-                                                            style={{ width: 200, height: 200, borderRadius: 16 }}
-                                                        />
+                                                        {attachment.type.includes('image') ?
+                                                            <Image
+                                                                source={{ uri: attachment.url }}
+                                                                style={{ width: 200, height: 200, borderRadius: 16 }}
+                                                            />
+                                                            :
+                                                            attachment.type.includes('video') ?
+                                                                <View>
+                                                                    <Video
+                                                                        source={{ uri: attachment.url }}
+                                                                        style={{ width: 200, height: 200, borderRadius: 16, backgroundColor: 'black' }}
+                                                                        useNativeControls
+                                                                        onLoadStart={() => setIsLoading(true)}
+                                                                        onReadyForDisplay={() => setIsLoading(false)}
+                                                                        resizeMode='contain'
+                                                                    />
+                                                                    {isLoading ?
+                                                                        <ActivityIndicator
+                                                                            size={'large'}
+                                                                            style={{ position: 'absolute', alignSelf: 'center', top: 80 }}
+                                                                        /> : null}
+                                                                </View>
+                                                                : null
+                                                        }
                                                     </View>
                                                 )
                                             })
@@ -125,10 +146,30 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                         message.attachments.map((attachment, index) => {
                                             return (
                                                 <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
-                                                    <Image
-                                                        source={{ uri: attachment.url }}
-                                                        style={{ width: 200, height: 200, borderRadius: 16 }}
-                                                    />
+                                                    {attachment.type.includes('image') ?
+                                                        <Image
+                                                            source={{ uri: attachment.url }}
+                                                            style={{ width: 200, height: 200, borderRadius: 16 }}
+                                                        />
+                                                        :
+                                                        attachment.type.includes('video') ?
+                                                            <View>
+                                                                <Video
+                                                                    source={{ uri: attachment.url }}
+                                                                    style={{ width: 200, height: 200, borderRadius: 16, backgroundColor: 'black' }}
+                                                                    useNativeControls
+                                                                    onLoadStart={() => setIsLoading(true)}
+                                                                    onReadyForDisplay={() => setIsLoading(false)}
+                                                                    resizeMode='contain'
+                                                                />
+                                                                {isLoading ?
+                                                                    <ActivityIndicator
+                                                                        size={'large'}
+                                                                        style={{ position: 'absolute', alignSelf: 'center', top: 80 }}
+                                                                    /> : null}
+                                                            </View>
+                                                            : null
+                                                    }
                                                 </View>
                                             )
                                         })
@@ -289,13 +330,13 @@ const LeaveGroupModal = ({ modalVisible, setModalVisible, chatId, navigation, us
 const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
     return (
         <View>
-            {item.type === 'image' ?
+            {item.mimeType.includes('image') ?
                 <Image
                     source={{ uri: item.uri }}
                     style={{ width: 80, height: 80, borderRadius: 6 }}
                 />
                 :
-                item.type === 'video' ?
+                item.mimeType.includes('video') ?
                     <Video
                         source={{ uri: item.uri }}
                         style={{ width: 80, height: 80, borderRadius: 6, backgroundColor: 'black' }}
@@ -350,27 +391,31 @@ const ChatScreen = ({ route, navigation }) => {
     const flatListRef = useRef()
     // const [currentChat, setCurrentChat] = useState(metadata.chat)
 
-    const pickFile = async () => {
-        const permission = await Picker.requestMediaLibraryPermissionsAsync()
-        
-        if (permission.status === 'granted') {
-            const result = await Picker.launchImageLibraryAsync({
-                mediaTypes: Picker.MediaTypeOptions.All,
-                quality: 1,
-                videoQuality: 0.7
-            })
+    const checkSize = (result) => {
+        for (let i = 0; i < result.assets.length; i++) {
+            if (result.assets[i].size > 20000000) {
+                return false
+            }
+        }
+        return true
+    }
 
-            if (!result.canceled) {
+    const pickFile = async () => {
+        const result = await Picker.getDocumentAsync({
+            multiple: true
+        })
+
+        if (!result.canceled) {
+            if (checkSize(result)) {
                 setMessage({
                     text: message.text,
                     files: [
                         ...message.files,
-                        {
-                            uri: result.assets[0].uri,
-                            type: result.assets[0].type
-                        }
+                        ...result.assets
                     ]
                 })
+            } else {
+                ToastAndroid.show('Keep file size under 20 MB.', ToastAndroid.LONG)
             }
         }
     }

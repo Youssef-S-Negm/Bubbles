@@ -1,7 +1,7 @@
 import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { decryptMessage, getChatById, removeUserFromGroupChat, sendMessage } from '../../db/chats'
-import { Ionicons, AntDesign, SimpleLineIcons, Entypo } from '@expo/vector-icons';
+import { Ionicons, AntDesign, SimpleLineIcons, Entypo, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserById } from '../../db/users';
 import { auth, db } from '../../db/config';
@@ -9,7 +9,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import ConfirmDeleteMessageButton from '../buttons/ConfirmDeleteMessageButton';
 import RejectDeleteMessageButton from '../buttons/RejectDeleteMessageButton';
 import * as Picker from 'expo-document-picker'
-import { Video } from 'expo-av'
+import { Video, Audio } from 'expo-av'
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt }) => {
     const [message, setMessage] = useState(null)
@@ -95,9 +95,13 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                                                         <ActivityIndicator
                                                                             size={'large'}
                                                                             style={{ position: 'absolute', alignSelf: 'center', top: 80 }}
-                                                                        /> : null}
+                                                                        />
+                                                                        : null
+                                                                    }
                                                                 </View>
-                                                                : null
+                                                                : attachment.type.includes('audio') ?
+                                                                    <SoundAttachmentMessageItem uri={attachment.url} />
+                                                                    : null
                                                         }
                                                     </View>
                                                 )
@@ -166,9 +170,13 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                                                     <ActivityIndicator
                                                                         size={'large'}
                                                                         style={{ position: 'absolute', alignSelf: 'center', top: 80 }}
-                                                                    /> : null}
+                                                                    />
+                                                                    : null
+                                                                }
                                                             </View>
-                                                            : null
+                                                            : attachment.type.includes('audio') ?
+                                                                <SoundAttachmentMessageItem uri={attachment.url} />
+                                                                : null
                                                     }
                                                 </View>
                                             )
@@ -187,6 +195,88 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
             )
         }
     }
+}
+
+const SoundAttachmentMessageItem = ({ uri }) => {
+    const [audio, setAudio] = useState()
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+
+    const playAudio = async () => {
+        setIsLoading(true)
+
+        if (!audio) {
+            const sound = new Audio.Sound()
+            await sound.loadAsync(
+                { uri: uri }
+            )
+            setAudio(sound)
+
+            await sound.playAsync()
+        } else {
+            await audio.playAsync()
+        }
+
+        setIsLoading(false)
+        setIsAudioPlaying(true)
+    }
+
+    const pauseAudio = async () => {
+        await audio.pauseAsync()
+        setIsAudioPlaying(false)
+    }
+
+    const handleAudio = async () => {
+        if (isAudioPlaying) {
+            await pauseAudio()
+        } else {
+            await playAudio()
+        }
+    }
+
+    useEffect(() => {
+        return audio ?
+            () => {
+                audio.unloadAsync()
+            } : undefined
+    }, [audio])
+
+    return (
+        <View style={{
+            width: 200,
+            height: 40,
+            borderRadius: 16,
+            backgroundColor: 'black',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+        }}>
+            <MaterialIcons
+                name='audiotrack'
+                size={20}
+                color={'white'}
+                style={{ marginLeft: 4 }}
+            />
+            {isLoading ?
+                <ActivityIndicator
+                    size={'large'}
+                    style={{ alignSelf: 'center', }}
+                />
+                :
+                <TouchableOpacity
+                    style={{ alignSelf: 'center', }}
+                    onPress={handleAudio}
+                >
+                    <AntDesign
+                        name={isAudioPlaying ? 'pausecircleo' : 'playcircleo'}
+                        color={'white'}
+                        size={20}
+                        style={{ marginRight: 4 }}
+                    />
+                </TouchableOpacity>
+            }
+        </View>
+    )
 }
 
 const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, sentAt, chatId }) => {
@@ -328,6 +418,42 @@ const LeaveGroupModal = ({ modalVisible, setModalVisible, chatId, navigation, us
 }
 
 const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
+    const [audio, setAudio] = useState()
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false)
+
+    const playAudio = async () => {
+        if (!audio) {
+            const { sound } = await Audio.Sound.createAsync({ uri: item.uri })
+            setAudio(sound)
+
+            await sound.playAsync()
+        } else {
+            await audio.playAsync()
+        }
+
+        setIsAudioPlaying(true)
+    }
+
+    const pauseAudio = async () => {
+        await audio.pauseAsync()
+        setIsAudioPlaying(false)
+    }
+
+    const handleAudio = async () => {
+        if (isAudioPlaying) {
+            await pauseAudio()
+        } else {
+            await playAudio()
+        }
+    }
+
+    useEffect(() => {
+        return audio ?
+            () => {
+                audio.unloadAsync()
+            } : undefined
+    }, [audio])
+
     return (
         <View>
             {item.mimeType.includes('image') ?
@@ -346,7 +472,17 @@ const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
                         shouldPlay
                     />
                     :
-                    null
+                    item.mimeType.includes('audio') ?
+                        <View style={{ width: 80, height: 80, borderRadius: 16, backgroundColor: 'black' }}>
+                            <MaterialIcons name='audiotrack' size={20} color={'white'} style={{ marginLeft: 4, marginTop: 4 }} />
+                            <TouchableOpacity
+                                style={{ position: 'absolute', alignSelf: 'center', top: 30 }}
+                                onPress={handleAudio}
+                            >
+                                <AntDesign name={isAudioPlaying ? 'pausecircleo' : 'playcircleo'} color={'white'} size={20} />
+                            </TouchableOpacity>
+                        </View>
+                        : null
             }
 
             {isUploading ? <ActivityIndicator size={80} style={{ position: 'absolute', alignSelf: 'center' }} /> : null}
@@ -404,6 +540,8 @@ const ChatScreen = ({ route, navigation }) => {
         const result = await Picker.getDocumentAsync({
             multiple: true
         })
+
+        console.log(result);
 
         if (!result.canceled) {
             if (checkSize(result)) {

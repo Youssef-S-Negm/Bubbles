@@ -39,7 +39,7 @@ async function sendMessage(chatId, message) {
             const formattedDate = "" + date.getDay() + date.getMonth() + date.getFullYear() + date.getHours() + date.getMinutes() + date.getSeconds()
             const mimeType = message.files[i].mimeType
             const fileFormat = mimeType.split('/')[1]
-            const storageRef = ref(storage, `chats/attachments/${formattedDate}.${fileFormat}`)
+            const storageRef = ref(storage, `chats/${chatId}/attachments/${formattedDate}.${fileFormat}`)
 
             const blob = await new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest()

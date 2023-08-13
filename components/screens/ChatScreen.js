@@ -169,50 +169,61 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                             {message.attachments.length > 0 ?
                                 <View>
                                     {
-                                        message.attachments.map((attachment, index) => {
-                                            return (
-                                                <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
-                                                    {attachment.type.includes('image') ?
-                                                        <Image
-                                                            source={{ uri: attachment.url }}
-                                                            style={{ width: 200, height: 200, borderRadius: 16 }}
-                                                        />
-                                                        :
-                                                        attachment.type.includes('video') ?
-                                                            <View>
-                                                                <Video
-                                                                    source={{ uri: attachment.url }}
-                                                                    style={{
-                                                                        width: 200,
-                                                                        height: 200,
-                                                                        borderRadius: 16,
-                                                                        backgroundColor: 'black'
-                                                                    }}
-                                                                    useNativeControls
-                                                                    onLoadStart={() => setIsLoading(true)}
-                                                                    onReadyForDisplay={() => setIsLoading(false)}
-                                                                    resizeMode='contain'
-                                                                />
-                                                                {isLoading ?
-                                                                    <ActivityIndicator
-                                                                        size={'large'}
+                                            message.attachments.map((attachment, index) => {
+                                                return (
+                                                    <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
+                                                        {attachment.mimeType.includes('image') ?
+                                                            <Image
+                                                                source={{ uri: attachment.url }}
+                                                                style={{
+                                                                    width: 200,
+                                                                    height: 200,
+                                                                    borderRadius: 16
+                                                                }}
+                                                            />
+                                                            :
+                                                            attachment.mimeType.includes('video') ?
+                                                                <View>
+                                                                    <Video
+                                                                        source={{ uri: attachment.url }}
                                                                         style={{
-                                                                            position: 'absolute',
-                                                                            alignSelf: 'center',
-                                                                            top: 80
+                                                                            width: 200,
+                                                                            height: 200,
+                                                                            borderRadius: 16,
+                                                                            backgroundColor: 'black'
                                                                         }}
+                                                                        useNativeControls
+                                                                        onLoadStart={() => setIsLoading(true)}
+                                                                        onReadyForDisplay={() => setIsLoading(false)}
+                                                                        resizeMode='contain'
                                                                     />
-                                                                    : null
-                                                                }
-                                                            </View>
-                                                            : attachment.type.includes('audio') ?
-                                                                <SoundAttachmentMessageItem uri={attachment.url} />
-                                                                : null
-                                                    }
-                                                </View>
-                                            )
-                                        })
-                                    }
+                                                                    {isLoading ?
+                                                                        <ActivityIndicator
+                                                                            size={'large'}
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                alignSelf: 'center',
+                                                                                top: 80
+                                                                            }}
+                                                                        />
+                                                                        : null
+                                                                    }
+                                                                </View>
+                                                                :
+                                                                attachment.mimeType.includes('audio') ?
+                                                                    <SoundAttachmentMessageItem uri={attachment.url} />
+                                                                    :
+                                                                    attachment.mimeType.includes('application') ?
+                                                                        <ApplicationTypeAttachmentItem
+                                                                            attachment={attachment}
+                                                                            chatId={chatId}
+                                                                        />
+                                                                        : null
+                                                        }
+                                                    </View>
+                                                )
+                                            })
+                                        }
                                 </View>
                                 :
                                 null}

@@ -12,6 +12,7 @@ import * as Picker from 'expo-document-picker'
 import { Video, Audio } from 'expo-av'
 import * as IntentLauncher from 'expo-intent-launcher'
 import * as FileSystem from 'expo-file-system'
+import Slider from '@react-native-community/slider';
 
 const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt, chatId }) => {
     const [message, setMessage] = useState(null)
@@ -95,7 +96,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                                                 />
                                                                 :
                                                                 attachment.mimeType.includes('audio') ?
-                                                                    <SoundAttachmentMessageItem uri={attachment.url} />
+                                                                    <SoundAttachmentMessageItem attachment={attachment} chatId={chatId} />
                                                                     :
                                                                     attachment.mimeType.includes('application') ?
                                                                         <ApplicationTypeAttachmentItem
@@ -149,45 +150,23 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                             return (
                                                 <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
                                                     {attachment.mimeType.includes('image') ?
-                                                        <Image
-                                                            source={{ uri: attachment.url }}
-                                                            style={{
-                                                                width: 200,
-                                                                height: 200,
-                                                                borderRadius: 16
-                                                            }}
+                                                        <ImageAttachmentMessageItem
+                                                            attachment={attachment}
+                                                            chatId={chatId}
+                                                            isLoading={isLoading}
+                                                            setIsLoading={setIsLoading}
                                                         />
                                                         :
                                                         attachment.mimeType.includes('video') ?
-                                                            <View>
-                                                                <Video
-                                                                    source={{ uri: attachment.url }}
-                                                                    style={{
-                                                                        width: 200,
-                                                                        height: 200,
-                                                                        borderRadius: 16,
-                                                                        backgroundColor: 'black'
-                                                                    }}
-                                                                    useNativeControls
-                                                                    onLoadStart={() => setIsLoading(true)}
-                                                                    onReadyForDisplay={() => setIsLoading(false)}
-                                                                    resizeMode='contain'
-                                                                />
-                                                                {isLoading ?
-                                                                    <ActivityIndicator
-                                                                        size={'large'}
-                                                                        style={{
-                                                                            position: 'absolute',
-                                                                            alignSelf: 'center',
-                                                                            top: 80
-                                                                        }}
-                                                                    />
-                                                                    : null
-                                                                }
-                                                            </View>
+                                                            <VideoAttachmentMessageItem
+                                                                attachment={attachment}
+                                                                isLoading={isLoading}
+                                                                setIsLoading={setIsLoading}
+                                                                chatId={chatId}
+                                                            />
                                                             :
                                                             attachment.mimeType.includes('audio') ?
-                                                                <SoundAttachmentMessageItem uri={attachment.url} />
+                                                                <SoundAttachmentMessageItem attachment={attachment} chatId={chatId} />
                                                                 :
                                                                 attachment.mimeType.includes('application') ?
                                                                     <ApplicationTypeAttachmentItem
@@ -215,18 +194,39 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
     }
 }
 
-const SoundAttachmentMessageItem = ({ uri }) => {
+const SoundAttachmentMessageItem = ({ attachment, chatId }) => {
     const [audio, setAudio] = useState()
     const [isAudioPlaying, setIsAudioPlaying] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [sliderValue, setSliderValue] = useState(0)
+    const [playBackStatus, setPlayBackStatus] = useState(null)
+    const [doesExist, setDoesExist] = useState(false)
+    const [isDownloaded, setIsDownloaded] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [localUri, setLocalUri] = useState(null)
 
     const playAudio = async () => {
         setIsLoading(true)
 
         if (!audio) {
-            const sound = new Audio.Sound()
-            await sound.loadAsync(
-                { uri: uri }
+            const { sound } = await Audio.Sound.createAsync(
+                {
+                    uri: localUri ? localUri : attachment.url,
+
+                },
+                {},
+                async status => {
+                    if (status.positionMillis) {
+                        setSliderValue(Math.floor(status.positionMillis / status.playableDurationMillis * 100))
+                    }
+                    setPlayBackStatus(status)
+                    if (status.didJustFinish) {
+                        await sound.playFromPositionAsync(0)
+                        await sound.pauseAsync()
+                        setIsAudioPlaying(false)
+                        setSliderValue(0)
+                    }
+                }
             )
             setAudio(sound)
 
@@ -252,6 +252,16 @@ const SoundAttachmentMessageItem = ({ uri }) => {
         }
     }
 
+    const checkIfFileExists = async () => {
+        let fileInfo = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/${attachment.name}`)
+
+        if (fileInfo.exists) {
+            setIsDownloaded(true)
+            setLocalUri(fileInfo.uri)
+        }
+        setDoesExist(fileInfo.exists)
+    }
+
     useEffect(() => {
         return audio ?
             () => {
@@ -259,39 +269,113 @@ const SoundAttachmentMessageItem = ({ uri }) => {
             } : undefined
     }, [audio])
 
+    useEffect(() => {
+        checkIfFileExists()
+    }, [])
+
+    useEffect(() => {
+        if (isDownloaded) {
+            checkIfFileExists()
+        }
+    }, [isDownloaded])
+
     return (
         <View style={{
-            width: 200,
-            height: 40,
-            borderRadius: 16,
             backgroundColor: 'black',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between'
+            width: 200,
+            borderRadius: 16,
+            padding: 4
         }}>
-            <MaterialIcons
-                name='audiotrack'
-                size={20}
-                color={'white'}
-                style={{ marginLeft: 4 }}
-            />
-            {isLoading ?
-                <ActivityIndicator
-                    size={'large'}
-                    style={{ alignSelf: 'center', }}
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}>
+                <MaterialIcons
+                    name='audiotrack'
+                    size={20}
+                    color={'white'}
+                    style={{ marginLeft: 4 }}
                 />
-                :
-                <TouchableOpacity
-                    style={{ alignSelf: 'center', }}
-                    onPress={handleAudio}
-                >
-                    <AntDesign
-                        name={isAudioPlaying ? 'pausecircleo' : 'playcircleo'}
-                        color={'white'}
+                <Text style={{ color: 'white' }}>{attachment.name}</Text>
+                {isLoading ?
+                    <ActivityIndicator
                         size={20}
-                        style={{ marginRight: 4 }}
+                        style={{ marginLeft: 4 }}
                     />
-                </TouchableOpacity>
+                    :
+                    <TouchableOpacity
+                        style={{ alignSelf: 'center', }}
+                        onPress={handleAudio}
+                    >
+                        <AntDesign
+                            name={isAudioPlaying ? 'pausecircleo' : 'playcircleo'}
+                            color={'white'}
+                            size={20}
+                            style={{ marginRight: 4 }}
+                        />
+                    </TouchableOpacity>
+                }
+            </View>
+            <Slider
+                style={{
+                    marginVertical: 4
+                }}
+                maximumTrackTintColor='#e4e4e4'
+                minimumValue={0}
+                maximumValue={100}
+                value={sliderValue}
+                onValueChange={async e => {
+                    setSliderValue(e)
+                    if (isAudioPlaying) {
+                        await audio.playFromPositionAsync(Math.floor(e / 100 * playBackStatus.playableDurationMillis))
+                    } else {
+                        await audio.playFromPositionAsync(Math.floor(e / 100 * playBackStatus.playableDurationMillis))
+                        await audio.pauseAsync()
+                    }
+                }}
+            />
+            {playBackStatus ?
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between'
+                }}>
+                    <Text style={{ color: 'white' }}>
+                        {`${Math.floor((playBackStatus.positionMillis / 1000 / 60))}:${Math.floor(playBackStatus.positionMillis / 1000)}`}
+                    </Text>
+                    <Text style={{ color: 'white' }}>
+                        {`${Math.floor((playBackStatus.playableDurationMillis / 1000 / 60))}:${Math.floor(playBackStatus.playableDurationMillis / 1000)}`}
+                    </Text>
+                </View>
+                : null}
+            {doesExist ? null :
+                isDownloading ?
+                    <ActivityIndicator
+                        size={20}
+                        style={{
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                    />
+                    :
+                    <TouchableOpacity
+                        style={{
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                        onPress={async () => {
+                            setIsDownloading(true)
+                            await downloadAttachment(attachment.url, attachment.name, chatId, attachment.mimeType)
+                            setIsDownloading(false)
+                            setIsDownloaded(!isDownloaded)
+                        }}
+                    >
+                        <AntDesign
+                            name='download'
+                            color={'white'}
+                            size={20}
+                        />
+                    </TouchableOpacity>
             }
         </View>
     )

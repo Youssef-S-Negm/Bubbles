@@ -4677,6 +4677,13 @@ expo-file-system@~15.4.0, expo-file-system@~15.4.2:
   dependencies:
     uuid "^3.4.0"
 
+expo-file-system@~15.4.3:
+  version "15.4.3"
+  resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-15.4.3.tgz#0cb2464c6e663ad8e8a742d5c538ed8ff1013b11"
+  integrity sha512-HaaCBTUATs2+i7T4jxIvoU9rViAHMvOD2eBaJ1H7xPHlwZlMORjQs7bsNKonR/TQoduxZBJLVZGawvaAJNCH8g==
+  dependencies:
+    uuid "^3.4.0"
+
 expo-font@~11.4.0:
   version "11.4.0"
   resolved "https://registry.yarnpkg.com/expo-font/-/expo-font-11.4.0.tgz#e2d31c0bb76ba3c37c2d84703a49aeafc3afef28"
@@ -4695,6 +4702,11 @@ expo-image-picker@~14.3.2:
   integrity sha512-xr/YeQMIYheXecWP033F2SPwpBlBR5xVCx7YSfSCTH8Y9pw7Z886agqKGbS9QBVGlzJ5qecJktZ6ASSzeslDVg==
   dependencies:
     expo-image-loader "~4.3.0"
+
+expo-intent-launcher@~10.7.0:
+  version "10.7.0"
+  resolved "https://registry.yarnpkg.com/expo-intent-launcher/-/expo-intent-launcher-10.7.0.tgz#a2e0e866ac19fe2103b6c6adf2aeb749ef767a7e"
+  integrity sha512-vzZQMpfwa+CtiStkppcvV8lcMgVj13Hej6ENcaSFM7ZHluCA3vjjhpoDMP6I/FAF2SwsEscxhkT2CWVP0VNdTw==
 
 expo-json-utils@~0.7.0:
   version "0.7.1"

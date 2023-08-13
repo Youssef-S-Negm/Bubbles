@@ -78,42 +78,20 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                                                 return (
                                                     <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
                                                         {attachment.mimeType.includes('image') ?
-                                                            <Image
-                                                                source={{ uri: attachment.url }}
-                                                                style={{
-                                                                    width: 200,
-                                                                    height: 200,
-                                                                    borderRadius: 16
-                                                                }}
+                                                            <ImageAttachmentMessageItem
+                                                                attachment={attachment}
+                                                                chatId={chatId}
+                                                                isLoading={isLoading}
+                                                                setIsLoading={setIsLoading}
                                                             />
                                                             :
                                                             attachment.mimeType.includes('video') ?
-                                                                <View>
-                                                                    <Video
-                                                                        source={{ uri: attachment.url }}
-                                                                        style={{
-                                                                            width: 200,
-                                                                            height: 200,
-                                                                            borderRadius: 16,
-                                                                            backgroundColor: 'black'
-                                                                        }}
-                                                                        useNativeControls
-                                                                        onLoadStart={() => setIsLoading(true)}
-                                                                        onReadyForDisplay={() => setIsLoading(false)}
-                                                                        resizeMode='contain'
-                                                                    />
-                                                                    {isLoading ?
-                                                                        <ActivityIndicator
-                                                                            size={'large'}
-                                                                            style={{
-                                                                                position: 'absolute',
-                                                                                alignSelf: 'center',
-                                                                                top: 80
-                                                                            }}
-                                                                        />
-                                                                        : null
-                                                                    }
-                                                                </View>
+                                                                <VideoAttachmentMessageItem
+                                                                    attachment={attachment}
+                                                                    isLoading={isLoading}
+                                                                    setIsLoading={setIsLoading}
+                                                                    chatId={chatId}
+                                                                />
                                                                 :
                                                                 attachment.mimeType.includes('audio') ?
                                                                     <SoundAttachmentMessageItem uri={attachment.url} />
@@ -169,61 +147,61 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                             {message.attachments.length > 0 ?
                                 <View>
                                     {
-                                            message.attachments.map((attachment, index) => {
-                                                return (
-                                                    <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
-                                                        {attachment.mimeType.includes('image') ?
-                                                            <Image
-                                                                source={{ uri: attachment.url }}
-                                                                style={{
-                                                                    width: 200,
-                                                                    height: 200,
-                                                                    borderRadius: 16
-                                                                }}
-                                                            />
-                                                            :
-                                                            attachment.mimeType.includes('video') ?
-                                                                <View>
-                                                                    <Video
-                                                                        source={{ uri: attachment.url }}
+                                        message.attachments.map((attachment, index) => {
+                                            return (
+                                                <View key={index} style={{ alignSelf: 'center', marginBottom: 16 }}>
+                                                    {attachment.mimeType.includes('image') ?
+                                                        <Image
+                                                            source={{ uri: attachment.url }}
+                                                            style={{
+                                                                width: 200,
+                                                                height: 200,
+                                                                borderRadius: 16
+                                                            }}
+                                                        />
+                                                        :
+                                                        attachment.mimeType.includes('video') ?
+                                                            <View>
+                                                                <Video
+                                                                    source={{ uri: attachment.url }}
+                                                                    style={{
+                                                                        width: 200,
+                                                                        height: 200,
+                                                                        borderRadius: 16,
+                                                                        backgroundColor: 'black'
+                                                                    }}
+                                                                    useNativeControls
+                                                                    onLoadStart={() => setIsLoading(true)}
+                                                                    onReadyForDisplay={() => setIsLoading(false)}
+                                                                    resizeMode='contain'
+                                                                />
+                                                                {isLoading ?
+                                                                    <ActivityIndicator
+                                                                        size={'large'}
                                                                         style={{
-                                                                            width: 200,
-                                                                            height: 200,
-                                                                            borderRadius: 16,
-                                                                            backgroundColor: 'black'
+                                                                            position: 'absolute',
+                                                                            alignSelf: 'center',
+                                                                            top: 80
                                                                         }}
-                                                                        useNativeControls
-                                                                        onLoadStart={() => setIsLoading(true)}
-                                                                        onReadyForDisplay={() => setIsLoading(false)}
-                                                                        resizeMode='contain'
                                                                     />
-                                                                    {isLoading ?
-                                                                        <ActivityIndicator
-                                                                            size={'large'}
-                                                                            style={{
-                                                                                position: 'absolute',
-                                                                                alignSelf: 'center',
-                                                                                top: 80
-                                                                            }}
-                                                                        />
-                                                                        : null
-                                                                    }
-                                                                </View>
+                                                                    : null
+                                                                }
+                                                            </View>
+                                                            :
+                                                            attachment.mimeType.includes('audio') ?
+                                                                <SoundAttachmentMessageItem uri={attachment.url} />
                                                                 :
-                                                                attachment.mimeType.includes('audio') ?
-                                                                    <SoundAttachmentMessageItem uri={attachment.url} />
-                                                                    :
-                                                                    attachment.mimeType.includes('application') ?
-                                                                        <ApplicationTypeAttachmentItem
-                                                                            attachment={attachment}
-                                                                            chatId={chatId}
-                                                                        />
-                                                                        : null
-                                                        }
-                                                    </View>
-                                                )
-                                            })
-                                        }
+                                                                attachment.mimeType.includes('application') ?
+                                                                    <ApplicationTypeAttachmentItem
+                                                                        attachment={attachment}
+                                                                        chatId={chatId}
+                                                                    />
+                                                                    : null
+                                                    }
+                                                </View>
+                                            )
+                                        })
+                                    }
                                 </View>
                                 :
                                 null}
@@ -398,6 +376,191 @@ const ApplicationTypeAttachmentItem = ({ attachment, chatId }) => {
                     />
                 </TouchableOpacity>
                 : isDownloading ?
+                    <ActivityIndicator
+                        size={'large'}
+                        style={{
+                            position: 'absolute',
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                    />
+                    :
+                    <TouchableOpacity
+                        style={{
+                            position: 'absolute',
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                        onPress={async () => {
+                            setIsDownloading(true)
+                            await downloadAttachment(attachment.url, attachment.name, chatId, attachment.mimeType)
+                            setIsDownloading(false)
+                            setIsDownloaded(!isDownloaded)
+                        }}
+                    >
+                        <AntDesign
+                            name='download'
+                            color={'white'}
+                            size={20}
+                        />
+                    </TouchableOpacity>
+            }
+        </View>
+    )
+}
+
+const VideoAttachmentMessageItem = ({ attachment, isLoading, setIsLoading, chatId }) => {
+    const [doesExist, setDoesExist] = useState(false)
+    const [isDownloaded, setIsDownloaded] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [localUri, setLocalUri] = useState(null)
+
+    const checkIfFileExists = async () => {
+        let fileInfo = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/${attachment.name}`)
+
+        if (fileInfo.exists) {
+            setIsDownloaded(true)
+            setLocalUri(fileInfo.uri)
+        }
+        setDoesExist(fileInfo.exists)
+    }
+
+    useEffect(() => {
+        checkIfFileExists()
+    }, [])
+
+    useEffect(() => {
+        if (isDownloaded) {
+            checkIfFileExists()
+        }
+    }, [isDownloaded])
+
+    return (
+        <View>
+            <Video
+                source={{ uri: localUri ? localUri : attachment.url }}
+                style={{
+                    width: 200,
+                    height: 200,
+                    borderRadius: 16,
+                    backgroundColor: 'black'
+                }}
+                useNativeControls
+                onLoadStart={() => setIsLoading(true)}
+                onReadyForDisplay={() => setIsLoading(false)}
+                resizeMode='contain'
+            />
+            {isLoading ?
+                <ActivityIndicator
+                    size={'large'}
+                    style={{
+                        position: 'absolute',
+                        alignSelf: 'center',
+                        top: 80
+                    }}
+                />
+                : null
+            }
+            {doesExist ?
+                null
+                :
+                isDownloading ?
+                    <ActivityIndicator
+                        size={'large'}
+                        style={{
+                            position: 'absolute',
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                    />
+                    :
+                    <TouchableOpacity
+                        style={{
+                            position: 'absolute',
+                            alignSelf: 'flex-end',
+                            padding: 8
+                        }}
+                        onPress={async () => {
+                            setIsDownloading(true)
+                            await downloadAttachment(attachment.url, attachment.name, chatId, attachment.mimeType)
+                            setIsDownloading(false)
+                            setIsDownloaded(!isDownloaded)
+                        }}
+                    >
+                        <AntDesign
+                            name='download'
+                            color={'white'}
+                            size={20}
+                        />
+                    </TouchableOpacity>
+            }
+        </View>
+    )
+}
+
+const ImageAttachmentMessageItem = ({ attachment, chatId, isLoading, setIsLoading }) => {
+    const [doesExist, setDoesExist] = useState(false)
+    const [isDownloaded, setIsDownloaded] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [localUri, setLocalUri] = useState(null)
+
+    const checkIfFileExists = async () => {
+        let fileInfo = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/${attachment.name}`)
+
+        if (fileInfo.exists) {
+            setIsDownloaded(true)
+            setLocalUri(fileInfo.uri)
+        }
+        setDoesExist(fileInfo.exists)
+    }
+
+    useEffect(() => {
+        checkIfFileExists()
+    }, [])
+
+    useEffect(() => {
+        if (isDownloaded) {
+            checkIfFileExists()
+        }
+    }, [isDownloaded])
+
+    return (
+        <View>
+            <Image
+                source={{ uri: localUri ? localUri : attachment.url }}
+                style={{
+                    width: 200,
+                    height: 200,
+                    borderRadius: 16,
+                    backgroundColor: 'black'
+                }}
+                resizeMode='contain'
+            />
+            {doesExist ?
+                <TouchableOpacity
+                    style={{
+                        position: 'absolute',
+                        alignSelf: 'flex-end',
+                        padding: 8
+                    }}
+                    onPress={() => {
+                        FileSystem.getContentUriAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/${attachment.name}`).then(async cUri => {
+                            await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                                data: cUri,
+                                flags: 1,
+                                type: attachment.mimeType
+                            })
+                        })
+                    }}
+                >
+                    <Ionicons
+                        name='open-outline'
+                        color={'white'}
+                        size={20}
+                    />
+                </TouchableOpacity>
+                :
+                isDownloading ?
                     <ActivityIndicator
                         size={'large'}
                         style={{

@@ -17,9 +17,13 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
     const [message, setMessage] = useState(null)
     const [error, setError] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [formattedDate, setFormattedDate] = useState(null)
 
     const handleDecryption = () => {
         try {
+            const date = new Date(item.sentAt)
+
+            setFormattedDate(date.getHours() + ':' + date.getMinutes())
             setMessage({
                 attachments: item.attachments,
                 message: item.message ? decryptMessage(item.message) : null,
@@ -38,9 +42,6 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
 
     if (message) {
         if (sender.id === auth.currentUser.uid) {
-            const date = new Date(item.sentAt)
-            const formattedDate = date.getHours() + ':' + date.getMinutes()
-
             return (
                 <TouchableOpacity
                     onLongPress={() => {
@@ -121,9 +122,6 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 </TouchableOpacity>
             )
         } else {
-            const date = new Date(item.sentAt)
-            const formattedDate = date.getHours() + ':' + date.getMinutes()
-
             return (
                 <View style={{
                     alignSelf: 'flex-start',

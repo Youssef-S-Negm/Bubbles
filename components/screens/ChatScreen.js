@@ -350,7 +350,16 @@ const ApplicationTypeAttachmentItem = ({ attachment, chatId }) => {
                         marginTop: 8,
                         marginLeft: 8
                     }}
-                /> : null}
+                /> :
+                <Ionicons
+                    name='document-outline'
+                    color={'white'}
+                    size={20}
+                    style={{
+                        marginTop: 8,
+                        marginLeft: 8
+                    }}
+                />}
             <View style={{ flex: 1, justifyContent: 'flex-end' }}>
                 <Text style={{ color: 'white', marginHorizontal: 8, marginVertical: 8 }}>{attachment.name}</Text>
             </View>
@@ -642,7 +651,17 @@ const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
                                             marginTop: 4,
                                             marginLeft: 4
                                         }}
-                                    /> : null}
+                                    /> :
+                                    <Ionicons
+                                        name='document-outline'
+                                        color={'white'}
+                                        size={20}
+                                        style={{
+                                            marginTop: 4,
+                                            marginLeft: 4
+                                        }}
+                                    />
+                                }
                                 <Text style={{
                                     color: 'white',
                                     marginTop: 4,

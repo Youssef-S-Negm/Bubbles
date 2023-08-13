@@ -668,9 +668,31 @@ const AttachmentsItem = ({ item, message, setMessage, isUploading }) => {
                                     marginHorizontal: 4
                                 }}>{item.name}</Text>
                             </View>
-                            : null
+                            :
+                            <View
+                                style={{
+                                    width: 80,
+                                    height: 80,
+                                    backgroundColor: 'black',
+                                    borderRadius: 16
+                                }}
+                            >
+                                <Ionicons
+                                    name='document-outline'
+                                    color={'white'}
+                                    size={20}
+                                    style={{
+                                        marginTop: 4,
+                                        marginLeft: 4
+                                    }}
+                                />
+                                <Text style={{
+                                    color: 'white',
+                                    marginTop: 4,
+                                    marginHorizontal: 4
+                                }}>{item.name}</Text>
+                            </View>
             }
-
             {isUploading ? <ActivityIndicator size={80} style={{ position: 'absolute', alignSelf: 'center' }} /> : null}
             <TouchableOpacity
                 style={{

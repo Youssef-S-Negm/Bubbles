@@ -1,8 +1,20 @@
-import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+    addDoc,
+    arrayRemove,
+    arrayUnion,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    query,
+    serverTimestamp,
+    updateDoc
+} from "firebase/firestore";
 import { auth, db, storage } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, getMetadata, ref, uploadBytes } from "firebase/storage";
+import * as FileSystem from 'expo-file-system'
 
 async function getChatById(id) {
     try {
@@ -56,9 +68,16 @@ async function sendMessage(chatId, message) {
             })
 
             await uploadBytes(storageRef, blob, { contentType: mimeType })
-            blob.close()
 
-            urls.push({ url: await getDownloadURL(storageRef), type: mimeType })
+            const metadata = await getMetadata(storageRef)
+            const customMetadata = {
+                mimeType: metadata.contentType,
+                name: metadata.name,
+                url: await getDownloadURL(storageRef)
+            }
+
+            blob.close()
+            urls.push(customMetadata)
         }
 
         await updateDoc(docRef, {
@@ -266,6 +285,23 @@ async function changeGroupPhoto(imageUri, chatId) {
     }
 }
 
+async function downloadAttachment(url, fileName, chatId) {
+    try {
+        const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
+
+        if (!directory.exists) {
+            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
+        }
+
+        await FileSystem.downloadAsync(url, `${directory.uri}/${fileName}`)
+
+        ToastAndroid.show('Download complete', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error downloading file:', err);
+        ToastAndroid.show("Couldn't download file. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -277,5 +313,6 @@ export {
     removeUserFromGroupChat,
     setUserAsGroupAdmin,
     changeGroupName,
-    changeGroupPhoto
+    changeGroupPhoto,
+    downloadAttachment
 }

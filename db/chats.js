@@ -1,8 +1,20 @@
-import { addDoc, arrayRemove, arrayUnion, collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+    addDoc,
+    arrayRemove,
+    arrayUnion,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    query,
+    serverTimestamp,
+    updateDoc
+} from "firebase/firestore";
 import { auth, db, storage } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, getMetadata, ref, uploadBytes } from "firebase/storage";
+import * as FileSystem from 'expo-file-system'
 
 async function getChatById(id) {
     try {
@@ -20,27 +32,66 @@ async function getChatById(id) {
 
 async function sendMessage(chatId, message) {
     try {
+        console.log(message);
         const docRef = doc(db, 'chats', chatId)
         const date = new Date()
         let cipherText
+        const urls = []
 
-        if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
-            throw new Error('Encryption key is not found')
-        } else {
-            cipherText = CryptoJS.AES.encrypt(message, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+        if (message.text.length > 0) {
+            if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
+                throw new Error('Encryption key is not found')
+            } else {
+                cipherText = CryptoJS.AES.encrypt(message.text, process.env.EXPO_PUBLIC_TEXT_KEY).toString()
+            }
+        }
+
+        for (let i = 0; i < message.files.length; i++) {
+            const date = new Date()
+            const formattedDate = "" + date.getDay() + date.getMonth() + date.getFullYear() + date.getHours() + date.getMinutes() + date.getSeconds()
+            const mimeType = message.files[i].mimeType
+            const fileFormat = mimeType.split('/')[1]
+            const storageRef = ref(storage, `chats/${chatId}/attachments/${formattedDate}.${fileFormat}`)
+
+            const blob = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest()
+                xhr.onload = function () {
+                    resolve(xhr.response)
+                }
+                xhr.onerror = function (e) {
+                    console.log(e);
+                    reject(new TypeError("Network request failed"))
+                }
+                xhr.responseType = 'blob'
+                xhr.open('GET', message.files[i].uri, true)
+                xhr.send(null)
+            })
+
+            await uploadBytes(storageRef, blob, { contentType: mimeType })
+
+            const metadata = await getMetadata(storageRef)
+            const customMetadata = {
+                mimeType: metadata.contentType,
+                name: metadata.name,
+                url: await getDownloadURL(storageRef)
+            }
+
+            blob.close()
+            urls.push(customMetadata)
         }
 
         await updateDoc(docRef, {
             messages: arrayUnion({
-                message: cipherText,
+                message: cipherText ? cipherText : null,
                 sender: auth.currentUser.uid,
-                sentAt: date.toISOString()
+                sentAt: date.toISOString(),
+                attachments: urls
             }),
             updatedAt: serverTimestamp()
         })
     } catch (err) {
         console.log('Error sending message:', err);
-        ToastAndroid.show("Couldn't send the message", ToastAndroid.SHORT)
+        ToastAndroid.show("Couldn't send the message. Try again later.", ToastAndroid.SHORT)
     }
 }
 
@@ -65,7 +116,7 @@ async function deleteMessage(chatId, sentAt, message) {
 
 function decryptMessage(message) {
     let bytes
-    
+
     if (!process.env.EXPO_PUBLIC_TEXT_KEY) {
         throw new Error("Decryption key is not found")
     } else {
@@ -234,6 +285,23 @@ async function changeGroupPhoto(imageUri, chatId) {
     }
 }
 
+async function downloadAttachment(url, fileName, chatId) {
+    try {
+        const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
+
+        if (!directory.exists) {
+            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
+        }
+
+        await FileSystem.downloadAsync(url, `${directory.uri}/${fileName}`)
+
+        ToastAndroid.show('Download complete', ToastAndroid.LONG)
+    } catch (err) {
+        console.log('Error downloading file:', err);
+        ToastAndroid.show("Couldn't download file. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -245,5 +313,6 @@ export {
     removeUserFromGroupChat,
     setUserAsGroupAdmin,
     changeGroupName,
-    changeGroupPhoto
+    changeGroupPhoto,
+    downloadAttachment
 }

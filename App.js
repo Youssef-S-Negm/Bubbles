@@ -32,7 +32,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       {!user ? <AuthStack /> : <AppStack user={user} setUser={setUser} />}
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </View>
   );
 }

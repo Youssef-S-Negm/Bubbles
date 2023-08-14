@@ -290,7 +290,7 @@ async function downloadAttachment(url, fileName, chatId) {
         const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
 
         if (!directory.exists) {
-            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`)
+            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/`, { intermediates: true })
         }
 
         await FileSystem.downloadAsync(url, `${directory.uri}/${fileName}`)

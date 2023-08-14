@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo/webpack-config": "^18.0.1",
     "@react-native-async-storage/async-storage": "1.18.2",
+    "@react-native-community/slider": "4.4.2",
     "@react-native-google-signin/google-signin": "^10.0.1",
     "@react-native-masked-view/masked-view": "0.2.9",
     "@react-navigation/bottom-tabs": "^6.5.8",

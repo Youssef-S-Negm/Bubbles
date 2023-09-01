@@ -13,7 +13,7 @@ import {
 import { auth, db, storage } from "./config";
 import { ToastAndroid } from "react-native";
 import CryptoJS from 'react-native-crypto-js'
-import { getDownloadURL, getMetadata, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, getMetadata, ref, uploadBytes } from "firebase/storage";
 import * as FileSystem from 'expo-file-system'
 
 async function getChatById(id) {
@@ -95,16 +95,17 @@ async function sendMessage(chatId, message) {
     }
 }
 
-async function deleteMessage(chatId, sentAt, message) {
+async function deleteMessage(chatId, message) {
     try {
         const docRef = doc(db, 'chats', chatId)
 
+        for (let i = 0; i < message.attachments.length; i++) {
+            const storageRef = ref(storage, `chats/${chatId}/attachments/${message.attachments[i].name}`)
+            await deleteObject(storageRef)
+        }
+
         await updateDoc(docRef, {
-            messages: arrayRemove({
-                sender: auth.currentUser.uid,
-                sentAt: sentAt,
-                message: message
-            })
+            messages: arrayRemove(message)
         })
 
         ToastAndroid.show('Message deleted!', ToastAndroid.SHORT)

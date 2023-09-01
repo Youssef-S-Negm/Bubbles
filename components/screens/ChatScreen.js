@@ -47,7 +47,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 <TouchableOpacity
                     onLongPress={() => {
                         setSentAt(item.sentAt)
-                        setDeletdedMessage(item.message)
+                        setDeletdedMessage(item)
                         setModalVisible(true)
                     }}
                     style={{ alignSelf: 'flex-end', marginLeft: 70 }}
@@ -676,7 +676,23 @@ const ImageAttachmentMessageItem = ({ attachment, chatId, isLoading, setIsLoadin
     )
 }
 
-const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, sentAt, chatId }) => {
+const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, chatId }) => {
+    const [decryptedMessage, setDecryptedMessage] = useState('')
+    const [error, setError] = useState(null)
+
+    const handleDecrypt = () => {
+        try {
+            setDecryptedMessage(decryptMessage(message.message))
+        } catch (err) {
+            console.log(err);
+            setError(err)
+        }
+    }
+
+    useEffect(() => {
+        handleDecrypt()
+    }, [])
+
     return (
         <Modal
             animationType='slide'
@@ -691,7 +707,10 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     <Text style={styles.modalTitle}>Would like to delete this message?</Text>
-                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{ }</Text>
+                    <Text style={{ alignSelf: 'flex-start', fontSize: 16, color: 'black' }}>{decryptedMessage}</Text>
+                    <Text style={{ alignSelf: 'flex-start', color: 'red', marginVertical: 4 }}>
+                        <Text style={{ textDecorationLine: 'underline', fontWeight: 'bold' }}>Note:</Text> All included attachments will be deleted
+                    </Text>
                     <View style={{ flexDirection: 'row', paddingTop: 8 }}>
                         <RejectDeleteMessageButton
                             setModalVisible={setModalVisible}
@@ -700,9 +719,8 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
                         <View style={{ width: 32 }} />
                         <ConfirmDeleteMessageButton
                             setModalVisible={setModalVisible}
-                            sentAt={sentAt}
-                            chatId={chatId}
                             message={message}
+                            chatId={chatId}
                         />
                     </View>
                 </View>

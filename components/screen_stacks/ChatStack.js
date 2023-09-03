@@ -4,6 +4,7 @@ import ChatScreen from "../screens/ChatScreen";
 import CreateGroupChatScreen from "../screens/CreateGroupChatScreen";
 import AddUserToGroupChatScreen from "../screens/AddUserToGroupChatScreen";
 import GroupChatInfoScreen from "../screens/GroupChatInfoScreen";
+import ChatAttachmentsStack from "./ChatAttachmentsStack";
 
 const Stack = createNativeStackNavigator()
 
@@ -15,6 +16,7 @@ const ChatStack = () => {
             <Stack.Screen name="Create group chat" component={CreateGroupChatScreen} />
             <Stack.Screen name="Add user" component={AddUserToGroupChatScreen} />
             <Stack.Screen name="Group info" component={GroupChatInfoScreen} />
+            <Stack.Screen name="Shared files" component={ChatAttachmentsStack} />
         </Stack.Navigator>
     )
 }

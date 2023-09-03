@@ -95,9 +95,19 @@ async function sendMessage(chatId, message) {
     }
 }
 
-async function deleteMessage(chatId, message) {
+async function deleteMessage(chatId, message, localStorageFlag) {
     try {
         const docRef = doc(db, 'chats', chatId)
+
+        if (localStorageFlag) {
+            for (let i = 0; i < message.attachments.length; i++) {
+                const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/chats/attachments/${message.attachments[i].name}`)
+                
+                if (directory.exists) {
+                    await FileSystem.deleteAsync(directory.uri)
+                }
+            }
+        }
 
         for (let i = 0; i < message.attachments.length; i++) {
             const storageRef = ref(storage, `chats/${chatId}/attachments/${message.attachments[i].name}`)

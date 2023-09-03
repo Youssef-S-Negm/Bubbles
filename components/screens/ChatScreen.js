@@ -743,7 +743,7 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
     )
 }
 
-const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chat, setLeaveGroupModalVisble }) => {
+const GroupChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole, chat, setLeaveGroupModalVisble }) => {
     return (
         <Modal
             visible={modalVisible}
@@ -786,6 +786,11 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                         :
                         null
                 }
+                <TouchableOpacity>
+                    <Text>
+                        Shared files
+                    </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => {
                         navigation.navigate('Group info', {
@@ -804,6 +809,46 @@ const ChatOptionsModal = ({ modalVisible, setModalVisible, navigation, userRole,
                     }}
                 >
                     <Text style={{ color: 'red', fontSize: 16 }}>Leave group</Text>
+                </TouchableOpacity>
+            </View>
+        </Modal>
+    )
+}
+
+const PrivateChatOptionsModal = ({ modalVisible, setModalVisible, navigation, chat }) => {
+    return (
+        <Modal
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+            transparent={true}
+            style={{ flex: 1 }}
+            animationType='fade'
+        >
+            <TouchableOpacity
+                onPress={() => {
+                    setModalVisible(false)
+                }}
+                style={{ flex: 1 }}
+            />
+            <View style={{
+                backgroundColor: 'white',
+                elevation: 5,
+                position: 'absolute',
+                alignSelf: 'flex-end',
+                right: 8,
+                top: 60,
+                padding: 8,
+                width: '32%',
+                borderRadius: 6
+            }}>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Shared files')
+                        setModalVisible(false)
+                    }}
+                    style={{ width: '100%' }}
+                >
+                    <Text>Shared files</Text>
                 </TouchableOpacity>
             </View>
         </Modal>
@@ -1015,7 +1060,8 @@ const ChatScreen = ({ route, navigation }) => {
     const [usersMap, setUsersMap] = useState(new Map())
     const [deletedMessage, setDeletedMessage] = useState('')
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-    const [chatOptionsModalVisbible, setChatOptionsModalVisbible] = useState(false)
+    const [groupChatOptionsModalVisbible, setGroupChatOptionsModalVisbible] = useState(false)
+    const [privateChatOptionsModalVisible, setPrivateChatOptionsModalVisible] = useState(false)
     const [leaveGroupModalVisble, setLeaveGroupModalVisble] = useState(false)
     const [sentAt, setSentAt] = useState('')
     const [currentUserRole, setCurrentUserRole] = useState(null)
@@ -1120,36 +1166,30 @@ const ChatScreen = ({ route, navigation }) => {
     }, [])
 
     const Header = () => {
-        if (chatType === 'private') {
-            return (
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 0.9, justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Image
-                        source={metadata.otherUser.photoURL ? { uri: metadata.otherUser.photoURL } : require('../../assets/avatar.png')}
+                        source={metadata.chatPhoto ?
+                            { uri: metadata.chatPhoto } : chatType === 'private' ?
+                                require('../../assets/avatar.png') : require('../../assets/group-avatar.png')}
                         style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
                     />
                     <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
                 </View>
-            )
-        } else if (chatType === 'group') {
-            return (
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 0.9, justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Image
-                            source={metadata.chatPhoto ? { uri: metadata.chatPhoto } : require('../../assets/group-avatar.png')}
-                            style={{ height: 40, width: 40, borderRadius: 40, backgroundColor: 'white' }}
-                        />
-                        <Text style={{ paddingLeft: 8, fontSize: 16 }}>{metadata.chatTitle}</Text>
-                    </View>
-                    <TouchableOpacity
-                        onPress={() => {
-                            setChatOptionsModalVisbible(true)
-                        }}
-                    >
-                        <SimpleLineIcons name='options-vertical' size={16} />
-                    </TouchableOpacity>
-                </View>
-            )
-        }
+                <TouchableOpacity
+                    onPress={() => {
+                        if (chatType === 'group') {
+                            setGroupChatOptionsModalVisbible(true)
+                        } else {
+                            setPrivateChatOptionsModalVisible(true)
+                        }
+                    }}
+                >
+                    <SimpleLineIcons name='options-vertical' size={16} />
+                </TouchableOpacity>
+            </View>
+        )
     }
 
     return (
@@ -1163,14 +1203,23 @@ const ChatScreen = ({ route, navigation }) => {
                 sentAt={sentAt}
                 chatId={metadata.chat.id}
             />
-            <ChatOptionsModal
-                modalVisible={chatOptionsModalVisbible}
-                setModalVisible={setChatOptionsModalVisbible}
-                navigation={navigation}
-                userRole={currentUserRole}
-                chat={metadata.chat}
-                setLeaveGroupModalVisble={setLeaveGroupModalVisble}
-            />
+            {chatType === 'group' ?
+                <GroupChatOptionsModal
+                    modalVisible={groupChatOptionsModalVisbible}
+                    setModalVisible={setGroupChatOptionsModalVisbible}
+                    navigation={navigation}
+                    userRole={currentUserRole}
+                    chat={metadata.chat}
+                    setLeaveGroupModalVisble={setLeaveGroupModalVisble}
+                />
+                :
+                <PrivateChatOptionsModal
+                    chat={metadata.chat}
+                    modalVisible={privateChatOptionsModalVisible}
+                    setModalVisible={setPrivateChatOptionsModalVisible}
+                    navigation={navigation}
+                />
+            }
             <LeaveGroupModal
                 chatId={metadata.chat.id}
                 modalVisible={leaveGroupModalVisble}

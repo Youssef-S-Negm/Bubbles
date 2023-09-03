@@ -13,8 +13,9 @@ import { Video, Audio } from 'expo-av'
 import * as IntentLauncher from 'expo-intent-launcher'
 import * as FileSystem from 'expo-file-system'
 import Slider from '@react-native-community/slider';
+import CheckBox from 'expo-checkbox'
 
-const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSentAt, chatId }) => {
+const MessageItem = ({ item, sender, setDeletedMessage, setModalVisible, setSentAt, chatId }) => {
     const [message, setMessage] = useState(null)
     const [error, setError] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
@@ -47,7 +48,7 @@ const MessageItem = ({ item, sender, setDeletdedMessage, setModalVisible, setSen
                 <TouchableOpacity
                     onLongPress={() => {
                         setSentAt(item.sentAt)
-                        setDeletdedMessage(item.message)
+                        setDeletedMessage(item)
                         setModalVisible(true)
                     }}
                     style={{ alignSelf: 'flex-end', marginLeft: 70 }}
@@ -676,7 +677,24 @@ const ImageAttachmentMessageItem = ({ attachment, chatId, isLoading, setIsLoadin
     )
 }
 
-const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, sentAt, chatId }) => {
+const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage, setSentAt, chatId }) => {
+    const [decryptedMessage, setDecryptedMessage] = useState('')
+    const [error, setError] = useState(null)
+    const [isChecked, setIsChecked] = useState(false)
+
+    const handleDecrypt = () => {
+        try {
+            setDecryptedMessage(decryptMessage(message.message))
+        } catch (err) {
+            console.log(err);
+            setError(err)
+        }
+    }
+
+    useEffect(() => {
+        handleDecrypt()
+    }, [message])
+
     return (
         <Modal
             animationType='slide'
@@ -691,7 +709,21 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     <Text style={styles.modalTitle}>Would like to delete this message?</Text>
-                    <Text style={{ alignSelf: 'flex-start', fontSize: 16 }}>{ }</Text>
+                    <Text style={{ alignSelf: 'flex-start', fontSize: 16, color: 'black' }}>{decryptedMessage}</Text>
+                    {isChecked ?
+                        <Text style={{ alignSelf: 'flex-start', color: 'red', marginVertical: 4 }}>
+                            <Text style={{ textDecorationLine: 'underline', fontWeight: 'bold' }}>Caution:</Text> All included attachments will be deleted
+                        </Text> : null
+                    }
+                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                        <CheckBox
+                            style={{ marginRight: 4, marginTop: 4 }}
+                            disabled={false}
+                            value={isChecked}
+                            onValueChange={e => setIsChecked(e)}
+                        />
+                        <Text>Delete attachments from local storage</Text>
+                    </View>
                     <View style={{ flexDirection: 'row', paddingTop: 8 }}>
                         <RejectDeleteMessageButton
                             setModalVisible={setModalVisible}
@@ -700,9 +732,9 @@ const ConfirmDeleteModal = ({ modalVisible, setModalVisible, message, setMessage
                         <View style={{ width: 32 }} />
                         <ConfirmDeleteMessageButton
                             setModalVisible={setModalVisible}
-                            sentAt={sentAt}
-                            chatId={chatId}
                             message={message}
+                            chatId={chatId}
+                            localStorageFlag={isChecked}
                         />
                     </View>
                 </View>
@@ -981,7 +1013,7 @@ const ChatScreen = ({ route, navigation }) => {
         files: []
     })
     const [usersMap, setUsersMap] = useState(new Map())
-    const [deletdedMessage, setDeletdedMessage] = useState('')
+    const [deletedMessage, setDeletedMessage] = useState('')
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
     const [chatOptionsModalVisbible, setChatOptionsModalVisbible] = useState(false)
     const [leaveGroupModalVisble, setLeaveGroupModalVisble] = useState(false)
@@ -989,7 +1021,6 @@ const ChatScreen = ({ route, navigation }) => {
     const [currentUserRole, setCurrentUserRole] = useState(null)
     const [isUploading, setIsUploading] = useState(false)
     const flatListRef = useRef()
-    // const [currentChat, setCurrentChat] = useState(metadata.chat)
 
     const checkSize = (result) => {
         for (let i = 0; i < result.assets.length; i++) {
@@ -1124,9 +1155,9 @@ const ChatScreen = ({ route, navigation }) => {
     return (
         <View style={styles.container}>
             <ConfirmDeleteModal
-                message={deletdedMessage}
+                message={deletedMessage}
                 modalVisible={deleteModalVisible}
-                setMessage={setDeletdedMessage}
+                setMessage={setDeletedMessage}
                 setModalVisible={setDeleteModalVisible}
                 setSentAt={setSentAt}
                 sentAt={sentAt}
@@ -1152,7 +1183,7 @@ const ChatScreen = ({ route, navigation }) => {
                 renderItem={({ item }) => <MessageItem
                     item={item}
                     sender={usersMap.get(item.sender)}
-                    setDeletdedMessage={setDeletdedMessage}
+                    setDeletedMessage={setDeletedMessage}
                     setModalVisible={setDeleteModalVisible}
                     setSentAt={setSentAt}
                     chatId={metadata.chat.id}

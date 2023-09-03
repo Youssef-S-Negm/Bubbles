@@ -4,11 +4,11 @@ import MaskedView from '@react-native-masked-view/masked-view'
 import { MaterialIcons } from '@expo/vector-icons'
 import { deleteMessage } from '../../db/chats'
 
-const ConfirmDeleteMessageButton = ({ setModalVisible, sentAt, chatId, message }) => {
+const ConfirmDeleteMessageButton = ({ setModalVisible, chatId, message, localStorageFlag }) => {
     return (
         <TouchableOpacity
             onPress={async () => {
-                await deleteMessage(chatId, sentAt, message)
+                await deleteMessage(chatId, message, localStorageFlag)
                 setModalVisible(false)
             }}
         >

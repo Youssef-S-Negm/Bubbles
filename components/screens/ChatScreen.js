@@ -843,7 +843,9 @@ const PrivateChatOptionsModal = ({ modalVisible, setModalVisible, navigation, ch
             }}>
                 <TouchableOpacity
                     onPress={() => {
-                        navigation.navigate('Shared files')
+                        navigation.navigate('Shared files', {
+                            chat: chat
+                        })
                         setModalVisible(false)
                     }}
                     style={{ width: '100%' }}

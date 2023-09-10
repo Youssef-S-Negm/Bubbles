@@ -139,6 +139,7 @@ async function connectUsers(userId2) {
                 between: [auth.currentUser.uid, userId2],
                 messages: [],
                 usersStatus: 'connected',
+                allAttachments: [],
                 updatedAt: serverTimestamp()
             })
 

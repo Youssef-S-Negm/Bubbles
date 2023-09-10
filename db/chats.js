@@ -87,6 +87,7 @@ async function sendMessage(chatId, message) {
                 sentAt: date.toISOString(),
                 attachments: urls
             }),
+            allAttachments: arrayUnion(...urls),
             updatedAt: serverTimestamp()
         })
     } catch (err) {
@@ -102,7 +103,7 @@ async function deleteMessage(chatId, message, localStorageFlag) {
         if (localStorageFlag) {
             for (let i = 0; i < message.attachments.length; i++) {
                 const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/chats/attachments/${message.attachments[i].name}`)
-                
+
                 if (directory.exists) {
                     await FileSystem.deleteAsync(directory.uri)
                 }
@@ -115,7 +116,8 @@ async function deleteMessage(chatId, message, localStorageFlag) {
         }
 
         await updateDoc(docRef, {
-            messages: arrayRemove(message)
+            messages: arrayRemove(message),
+            allAttachments: arrayRemove(...message.attachments)
         })
 
         ToastAndroid.show('Message deleted!', ToastAndroid.SHORT)
@@ -313,6 +315,22 @@ async function downloadAttachment(url, fileName, chatId) {
     }
 }
 
+async function deleteAttachmentFromLocalStorage(chatId, fileName) {
+    try {
+        const directory = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}/${chatId}/attachments/${fileName}`)
+
+        if (directory.exists) {
+            await FileSystem.deleteAsync(directory.uri)
+            ToastAndroid.show('Attachment deleted successfully!', ToastAndroid.LONG)
+        } else {
+            throw new Error(`Directory "${directory.uri}" doesn't exist.`)
+        }
+    } catch (err) {
+        console.log('Error deleting attachment:', err);
+        ToastAndroid.show("Couldn't delete attachment. Try again later.", ToastAndroid.LONG)
+    }
+}
+
 export {
     getChatById,
     sendMessage,
@@ -325,5 +343,6 @@ export {
     setUserAsGroupAdmin,
     changeGroupName,
     changeGroupPhoto,
-    downloadAttachment
+    downloadAttachment,
+    deleteAttachmentFromLocalStorage
 }
